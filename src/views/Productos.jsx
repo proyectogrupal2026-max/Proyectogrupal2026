@@ -11,7 +11,7 @@ import NotificacionOperacion from "../components/NotificacionOperacion";
 
 // NUEVOS COMPONENTES DE LÓGICA
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
-import Paginacion from "../components/Ordenamiento/Paginacion";
+import Paginacion from "../components/ordenamiento/Paginacion";
 
 const Productos = () => {
   const [productos, setProductos] = useState([]);
