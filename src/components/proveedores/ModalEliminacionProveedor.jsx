@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Modal, Button } from "react-bootstrap";
 
-const ModalEliminacionProducto = ({
+const ModalEliminacionProveedor = ({
   mostrarModalEliminacion,
   setMostrarModalEliminacion,
-  eliminarProducto,
-  producto,
+  eliminarProveedor,
+  proveedor,
 }) => {
   const [deshabilitado, setDeshabilitado] = useState(false);
 
@@ -13,7 +13,7 @@ const ModalEliminacionProducto = ({
     if (deshabilitado) return;
 
     setDeshabilitado(true);
-    await eliminarProducto(producto?.id);
+    await eliminarProveedor(proveedor?.id);
     setDeshabilitado(false);
     setMostrarModalEliminacion(false);
   };
@@ -31,8 +31,8 @@ const ModalEliminacionProducto = ({
       </Modal.Header>
 
       <Modal.Body>
-        ¿Estás seguro de que deseas eliminar el producto{" "}
-        <strong>"{producto?.nombre}"</strong>?
+        ¿Estás seguro de que deseas eliminar al proveedor{" "}
+        <strong>"{proveedor?.nombre}"</strong>?
         <br />
         <small className="text-muted">
           Esta acción no se puede deshacer.
@@ -60,4 +60,4 @@ const ModalEliminacionProducto = ({
   );
 };
 
-export default ModalEliminacionProducto;
+export default ModalEliminacionProveedor;

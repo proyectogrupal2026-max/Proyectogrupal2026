@@ -8,6 +8,8 @@ import Categorias from "./views/Categorias";
 import Catalogo from "./views/Catalogo";
 import Productos from "./views/Productos";
 import Login from "./views/Login";
+import Proveedores from "./views/Proveedores";
+import Perfiles from "./views/Perfiles";
 import RutaProtegida from "./components/rutas/RutaProtegida";
 import Pagina404 from "./views/Pagina404";
 
@@ -29,6 +31,8 @@ const App = () => {
           <Route path="/categorias" element={<RutaProtegida><Categorias /></RutaProtegida>} />
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/productos" element={<RutaProtegida><Productos /></RutaProtegida>} />
+          <Route path="/proveedores" element={<RutaProtegida><Proveedores /></RutaProtegida>} />
+          <Route path="/perfiles" element={<RutaProtegida><Perfiles /></RutaProtegida>} />
 
           <Route path="*" element={<Pagina404 />} />
 

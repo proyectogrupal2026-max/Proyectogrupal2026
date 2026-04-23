@@ -89,14 +89,21 @@ const Encabezado = () => {
             {mostrarMenu ? <i className="bi-bag-heart-fill me-2"></i> : null}
             <strong>Productos</strong>
           </Nav.Link>
-
-          {/* Opción para ir al catálogo público desde admin */}
+          
           <Nav.Link
-            onClick={() => manejarNavegacion("/catalogo")}
+            onClick={() => manejarNavegacion("/proveedores")}
             className={mostrarMenu ? "color-texto-marca" : "text-black"}
           >
             {mostrarMenu ? <i className="bi-images me-2"></i> : null}
-            <strong>Catálogo</strong>
+            <strong>Proveedores</strong>
+          </Nav.Link>
+
+          <Nav.Link
+            onClick={() => manejarNavegacion("/perfiles")}
+            className={mostrarMenu ? "color-texto-marca" : "text-black"}
+          >
+            {mostrarMenu ? <i className="bi-images me-2"></i> : null}
+            <strong>Perfiles</strong>
           </Nav.Link>
 
           <hr />

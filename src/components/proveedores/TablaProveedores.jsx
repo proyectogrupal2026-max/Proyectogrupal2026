@@ -2,26 +2,26 @@ import React, { useState, useEffect } from "react";
 import { Table, Spinner, Button } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
-const TablaCategorias = ({
-  categorias,
+const TablaProveedores = ({
+  proveedores,
   abrirModalEdicion,
   abrirModalEliminacion,
 }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (categorias && categorias.length > 0) {
+    if (proveedores && proveedores.length > 0) {
       setLoading(false);
     } else {
       setLoading(true);
     }
-  }, [categorias]);
+  }, [proveedores]);
 
   return (
     <>
       {loading ? (
         <div className="text-center">
-          <h4>Cargando categorías...</h4>
+          <h4>Cargando proveedores...</h4>
           <Spinner animation="border" variant="success" role="status" />
         </div>
       ) : (
@@ -29,25 +29,34 @@ const TablaCategorias = ({
           <thead>
             <tr>
               <th>ID</th>
-              <th>Nombre Categoría</th>
-              <th className="d-none d-md-table-cell">Descripción</th>
+              <th>Nombre</th>
+              <th className="d-none d-md-table-cell">Teléfono</th>
+              <th className="d-none d-lg-table-cell">Dirección</th>
               <th className="text-center">Acciones</th>
             </tr>
           </thead>
+
           <tbody>
-            {categorias.map((categoria) => (
-              <tr key={categoria.id}>
-                <td>{categoria.id}</td>
-                <td>{categoria.nombre_categoria}</td>
+            {proveedores.map((proveedor) => (
+              <tr key={proveedor.id}>
+                <td>{proveedor.id}</td>
+
+                <td>{proveedor.nombre}</td>
+
                 <td className="d-none d-md-table-cell">
-                  {categoria.descripcion_categoria}
+                  {proveedor.telefono || "Sin teléfono"}
                 </td>
+
+                <td className="d-none d-lg-table-cell">
+                  {proveedor.direccion || "Sin dirección"}
+                </td>
+
                 <td className="text-center">
                   <Button
                     variant="outline-warning"
                     size="sm"
                     className="m-1"
-                    onClick={() => abrirModalEdicion(categoria)}
+                    onClick={() => abrirModalEdicion(proveedor)}
                   >
                     <i className="bi bi-pencil"></i>
                   </Button>
@@ -55,7 +64,7 @@ const TablaCategorias = ({
                   <Button
                     variant="outline-danger"
                     size="sm"
-                    onClick={() => abrirModalEliminacion(categoria)}
+                    onClick={() => abrirModalEliminacion(proveedor)}
                   >
                     <i className="bi bi-trash"></i>
                   </Button>
@@ -69,4 +78,4 @@ const TablaCategorias = ({
   );
 };
 
-export default TablaCategorias;
+export default TablaProveedores;

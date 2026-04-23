@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Form, Button } from "react-bootstrap";
 
-const ModalEdicionCategoria = ({
+const ModalEdicionProveedor = ({
   mostrarModalEdicion,
   setMostrarModalEdicion,
-  categoriaEditar,
+  proveedorEditar,
   manejoCambioInputEdicion,
-  actualizarCategoria,
+  actualizarProveedor,
 }) => {
   const [deshabilitado, setDeshabilitado] = useState(false);
 
-  // Resetear estado cuando se abre el modal
   useEffect(() => {
     if (!mostrarModalEdicion) {
       setDeshabilitado(false);
@@ -19,10 +18,11 @@ const ModalEdicionCategoria = ({
 
   const handleActualizar = async () => {
     if (deshabilitado) return;
-    if (!categoriaEditar.nombre_categoria?.trim()) return;
+
+    if (!proveedorEditar.nombre?.trim()) return;
 
     setDeshabilitado(true);
-    await actualizarCategoria();
+    await actualizarProveedor();
     setDeshabilitado(false);
   };
 
@@ -35,32 +35,42 @@ const ModalEdicionCategoria = ({
       centered
     >
       <Modal.Header closeButton>
-        <Modal.Title>Editar Categoría</Modal.Title>
+        <Modal.Title>Editar Proveedor</Modal.Title>
       </Modal.Header>
 
       <Modal.Body>
         <Form>
           <Form.Group className="mb-3">
-            <Form.Label>Nombre de la Categoría *</Form.Label>
+            <Form.Label>Nombre *</Form.Label>
             <Form.Control
               type="text"
-              name="nombre_categoria"
-              value={categoriaEditar.nombre_categoria || ""}
+              name="nombre"
+              value={proveedorEditar.nombre || ""}
               onChange={manejoCambioInputEdicion}
-              placeholder="Ej: Electrónicos"
-              required
+              placeholder="Ingresa el nombre del proveedor"
             />
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Descripción</Form.Label>
+            <Form.Label>Teléfono</Form.Label>
+            <Form.Control
+              type="text"
+              name="telefono"
+              value={proveedorEditar.telefono || ""}
+              onChange={manejoCambioInputEdicion}
+              placeholder="Ingresa el teléfono"
+            />
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Dirección</Form.Label>
             <Form.Control
               as="textarea"
               rows={3}
-              name="descripcion_categoria"
-              value={categoriaEditar.descripcion_categoria || ""}
+              name="direccion"
+              value={proveedorEditar.direccion || ""}
               onChange={manejoCambioInputEdicion}
-              placeholder="Descripción opcional de la categoría..."
+              placeholder="Ingresa la dirección"
             />
           </Form.Group>
         </Form>
@@ -74,12 +84,11 @@ const ModalEdicionCategoria = ({
         >
           Cancelar
         </Button>
+
         <Button
           variant="primary"
           onClick={handleActualizar}
-          disabled={
-            !categoriaEditar.nombre_categoria?.trim() || deshabilitado
-          }
+          disabled={!proveedorEditar.nombre?.trim() || deshabilitado}
         >
           {deshabilitado ? "Actualizando..." : "Guardar Cambios"}
         </Button>
@@ -88,4 +97,4 @@ const ModalEdicionCategoria = ({
   );
 };
 
-export default ModalEdicionCategoria;
+export default ModalEdicionProveedor;
