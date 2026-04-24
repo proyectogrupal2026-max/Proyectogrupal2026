@@ -7,7 +7,7 @@ import { supabase } from "../../database/supabaseconfig";
 const Encabezado = () => {
   const [mostrarMenu, setMostrarMenu] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation(); // Para detectar la ruta actual
+  const location = useLocation();
 
   const manejarToggle = () => setMostrarMenu(!mostrarMenu);
 
@@ -29,13 +29,11 @@ const Encabezado = () => {
     }
   };
 
-  // Detectar rutas especiales
   const esLogin = location.pathname === "/login";
   const esCatalogo =
     location.pathname === "/catalogo" &&
     localStorage.getItem("usuario-supabase") === null;
 
-  // Contenido del menú
   let contenidoMenu;
 
   if (esLogin) {
@@ -89,12 +87,22 @@ const Encabezado = () => {
             {mostrarMenu ? <i className="bi-bag-heart-fill me-2"></i> : null}
             <strong>Productos</strong>
           </Nav.Link>
+
+          {/* --- AQUÍ ESTÁ LO NUEVO: VENTAS --- */}
+          <Nav.Link
+            onClick={() => manejarNavegacion("/ventas")}
+            className={mostrarMenu ? "color-texto-marca" : "text-black"}
+          >
+            {mostrarMenu ? <i className="bi-cart-check-fill me-2"></i> : null}
+            <strong>Ventas</strong>
+          </Nav.Link>
+          {/* ---------------------------------- */}
           
           <Nav.Link
             onClick={() => manejarNavegacion("/proveedores")}
             className={mostrarMenu ? "color-texto-marca" : "text-black"}
           >
-            {mostrarMenu ? <i className="bi-images me-2"></i> : null}
+            {mostrarMenu ? <i className="bi-truck me-2"></i> : null}
             <strong>Proveedores</strong>
           </Nav.Link>
 
@@ -102,13 +110,12 @@ const Encabezado = () => {
             onClick={() => manejarNavegacion("/perfiles")}
             className={mostrarMenu ? "color-texto-marca" : "text-black"}
           >
-            {mostrarMenu ? <i className="bi-images me-2"></i> : null}
+            {mostrarMenu ? <i className="bi-people-fill me-2"></i> : null}
             <strong>Perfiles</strong>
           </Nav.Link>
 
           <hr />
 
-          {/* Ícono cerrar sesión en barra superior */}
           {!mostrarMenu && (
             <Nav.Link
               onClick={cerrarSesion}
@@ -117,11 +124,8 @@ const Encabezado = () => {
               <i className="bi-box-arrow-right me-2"></i>
             </Nav.Link>
           )}
-
-          <hr />
         </Nav>
 
-        {/* Información de usuario y botón cerrar sesión */}
         {mostrarMenu && (
           <div className="mt-3 p-3 rounded bg-light text-dark">
             <p className="mb-2">
@@ -162,7 +166,6 @@ const Encabezado = () => {
           </strong>
         </Navbar.Brand>
 
-        {/* Botón del menú */}
         {!esLogin && (
           <Navbar.Toggle
             aria-controls="menu-offcanvas"
@@ -170,7 +173,6 @@ const Encabezado = () => {
           />
         )}
 
-        {/* Menú lateral */}
         <Navbar.Offcanvas
           id="menu-offcanvas"
           placement="end"
@@ -178,7 +180,7 @@ const Encabezado = () => {
           onHide={() => setMostrarMenu(false)}
         >
           <Offcanvas.Header closeButton>
-            <Offcanvas.Title>Menú Discosa</Offcanvas.Title>
+            <Offcanvas.Title>Menú Martita Tools</Offcanvas.Title>
           </Offcanvas.Header>
 
           <Offcanvas.Body>
