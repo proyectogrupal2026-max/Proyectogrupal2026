@@ -1,24 +1,16 @@
-// ================================================
-// 2. Vista: Login.jsx (o pages/Login.jsx)
-// (Crea este archivo en: src/views/Login.jsx o src/pages/Login.jsx)
-// ================================================
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import FormularioLogin from "../components/login/FormularioLogin";   // ← Ajusta la ruta según tu carpeta
-import { supabase } from "../database/supabaseconfig";       // ← Ajusta la ruta según tu proyecto
+import FormularioLogin from "../components/login/FormularioLogin";   
+import { supabase } from "../database/supabaseconfig";       
 
 const Login = () => {
-  // Variables de estado
   const [usuario, setUsuario] = useState("");
   const [contraseña, setContraseña] = useState("");
   const [error, setError] = useState("");
-
-  // Hook de navegación
   const navegar = useNavigate();
 
-  // Función para iniciar sesión con Supabase
   const iniciarSesion = async () => {
+    setError("");
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: usuario,
@@ -31,25 +23,20 @@ const Login = () => {
       }
 
       if (data.user) {
-        // Guardamos en localStorage (como indica la guía)
         localStorage.setItem("usuario-supabase", usuario);
-        navegar("/");   // Redirige al dashboard o página principal
+        navegar("/");   
       }
     } catch (err) {
       setError("Error al conectar con el servidor");
-      console.error("Error en la solicitud:", err);
     }
   };
 
-  // useEffect para verificar si ya hay sesión activa
   useEffect(() => {
-    const usuarioGuardado = localStorage.getItem("usuario-supabase");
-    if (usuarioGuardado) {
+    if (localStorage.getItem("usuario-supabase")) {
       navegar("/");
     }
   }, [navegar]);
 
-  // Estilos del contenedor (fondo degradado)
   const estiloContenedor = {
     position: "fixed",
     top: "0",
@@ -59,8 +46,7 @@ const Login = () => {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "linear-gradient(135deg, #FFDEA9, #B5FFFC)", // corregí el hex incompleto de la guía
-    overflow: "hidden",
+    background: "linear-gradient(135deg, #FFDEA9, #B5FFFC)", 
     padding: "20px",
   };
 
