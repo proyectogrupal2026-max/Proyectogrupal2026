@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Card, Row, Col, Spinner, Button } from "react-bootstrap";
+import { Card, Row, Col, Spinner, Button, Image } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 const TarjetaProducto = ({
   productos,
   abrirModalEdicion,
-  abrirModalEliminacion,
+  abrirModalEliminacion
 }) => {
   const [cargando, setCargando] = useState(true);
   const [idTarjetaActiva, setIdTarjetaActiva] = useState(null);
 
   useEffect(() => {
-    setCargando(!(productos && productos.length > 0));
+    // Si productos no es null, dejamos de mostrar el spinner
+    setCargando(!(productos));
   }, [productos]);
 
   const manejarTeclaEscape = useCallback((evento) => {
@@ -20,8 +21,7 @@ const TarjetaProducto = ({
 
   useEffect(() => {
     window.addEventListener("keydown", manejarTeclaEscape);
-    return () =>
-      window.removeEventListener("keydown", manejarTeclaEscape);
+    return () => window.removeEventListener("keydown", manejarTeclaEscape);
   }, [manejarTeclaEscape]);
 
   const alternarTarjetaActiva = (id) => {
@@ -33,11 +33,16 @@ const TarjetaProducto = ({
       {cargando ? (
         <div className="text-center my-5">
           <h5>Cargando productos...</h5>
-          <Spinner animation="border" variant="success" role="status" />
+          <Spinner animation="border" variant="primary" role="status" />
+        </div>
+      ) : productos.length === 0 ? (
+        <div className="text-center my-5">
+          <h5>No se encontraron productos.</h5>
         </div>
       ) : (
         <div>
           {productos.map((producto) => {
+            // Se actualizó a producto.id según el esquema
             const tarjetaActiva = idTarjetaActiva === producto.id;
 
             return (
@@ -62,32 +67,31 @@ const TarjetaProducto = ({
                   }`}
                 >
                   <Row className="align-items-center gx-3">
-                    <Col xs={2} className="px-2">
-                      <div className="bg-light d-flex align-items-center justify-content-center rounded tarjeta-categoria-placeholder-imagen">
-                        <i className="bi bi-box-seam text-muted fs-3"></i>
-                      </div>
+                    <Col xs={3} sm={2} className="px-2">
+                      <Image
+                        src={producto.url_imagen}
+                        alt={producto.nombre}
+                        rounded
+                        className="w-100"
+                        style={{ aspectRatio: "1/1", objectFit: "cover" }}
+                      />
                     </Col>
 
-                    <Col xs={5} className="text-start">
-                      <div className="fw-semibold text-truncate">
+                    <Col xs={5} sm={6} className="text-start">
+                      <div className="fw-bold text-truncate">
                         {producto.nombre}
                       </div>
-
                       <div className="small text-muted text-truncate">
                         {producto.categorias?.nombre_categoria || "Sin categoría"}
                       </div>
                     </Col>
 
                     <Col
-                      xs={5}
+                      xs={4}
                       className="d-flex flex-column align-items-end justify-content-center text-end"
                     >
-                      <div className="fw-semibold small">
-                        C$ {Number(producto.precio_venta).toFixed(2)}
-                      </div>
-
-                      <div className="small text-muted">
-                        Stock: {producto.stock}
+                      <div className="fw-bold text-primary">
+                        ${parseFloat(producto.precio_venta).toFixed(2)}
                       </div>
                     </Col>
                   </Row>

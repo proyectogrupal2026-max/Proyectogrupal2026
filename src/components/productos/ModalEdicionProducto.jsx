@@ -1,26 +1,20 @@
-import React, { useState, useEffect } from "react";
-import { Modal, Form, Button } from "react-bootstrap";
+import React, { useState } from "react";
+import { Modal, Form, Button, Row, Col } from "react-bootstrap";
 
 const ModalEdicionProducto = ({
   mostrarModalEdicion,
   setMostrarModalEdicion,
   productoEditar,
-  categorias,
   manejoCambioInputEdicion,
+  manejoCambioArchivoActualizar,
   actualizarProducto,
+  categorias
 }) => {
-  const [deshabilitado, setDeshabilitado] = useState(false);
 
-  useEffect(() => {
-    if (!mostrarModalEdicion) {
-      setDeshabilitado(false);
-    }
-  }, [mostrarModalEdicion]);
+  const [deshabilitado, setDeshabilitado] = useState(false);
 
   const handleActualizar = async () => {
     if (deshabilitado) return;
-    if (!productoEditar.nombre?.trim()) return;
-
     setDeshabilitado(true);
     await actualizarProducto();
     setDeshabilitado(false);
@@ -31,8 +25,8 @@ const ModalEdicionProducto = ({
       show={mostrarModalEdicion}
       onHide={() => setMostrarModalEdicion(false)}
       backdrop="static"
-      keyboard={false}
       centered
+      size="lg"
     >
       <Modal.Header closeButton>
         <Modal.Title>Editar Producto</Modal.Title>
@@ -40,97 +34,127 @@ const ModalEdicionProducto = ({
 
       <Modal.Body>
         <Form>
-          <Form.Group className="mb-3">
-            <Form.Label>Nombre del Producto *</Form.Label>
-            <Form.Control
-              type="text"
-              name="nombre"
-              value={productoEditar.nombre || ""}
-              onChange={manejoCambioInputEdicion}
-              placeholder="Ej: Martillo de Uña 16oz"
-              required
-            />
-          </Form.Group>
+          <Row>
+            {/* Categoría */}
+            <Col xs={12} md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Categoría *</Form.Label>
+                <Form.Select
+                  name="categoria_producto"
+                  value={productoEditar.categoria_producto || ""}
+                  onChange={manejoCambioInputEdicion}
+                  required
+                >
+                  <option value="">Seleccione...</option>
+                  {categorias.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.nombre_categoria}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Categoría *</Form.Label>
-            <Form.Select
-              name="categoria_id"
-              value={productoEditar.categoria_id || ""}
-              onChange={manejoCambioInputEdicion}
-              required
-            >
-              <option value="">Seleccione una categoría</option>
-              {categorias.map((categoria) => (
-                <option key={categoria.id} value={categoria.id}>
-                  {categoria.nombre_categoria}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
+            {/* Nombre */}
+            <Col xs={12} md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Nombre *</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="nombre"
+                  value={productoEditar.nombre || ""}
+                  onChange={manejoCambioInputEdicion}
+                  required
+                />
+              </Form.Group>
+            </Col>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Precio de Compra *</Form.Label>
-            <Form.Control
-              type="number"
-              step="0.01"
-              min="0"
-              name="precio_compra"
-              value={productoEditar.precio_compra || ""}
-              onChange={manejoCambioInputEdicion}
-              placeholder="0.00"
-              required
-            />
-          </Form.Group>
+            {/* Precio Compra */}
+            <Col xs={12} md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>Precio de compra *</Form.Label>
+                <Form.Control
+                  type="number"
+                  step="0.01"
+                  name="precio_compra"
+                  value={productoEditar.precio_compra || ""}
+                  onChange={manejoCambioInputEdicion}
+                  required
+                />
+              </Form.Group>
+            </Col>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Precio de Venta *</Form.Label>
-            <Form.Control
-              type="number"
-              step="0.01"
-              min="0"
-              name="precio_venta"
-              value={productoEditar.precio_venta || ""}
-              onChange={manejoCambioInputEdicion}
-              placeholder="0.00"
-              required
-            />
-          </Form.Group>
+            {/* Precio Venta */}
+            <Col xs={12} md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>Precio de venta *</Form.Label>
+                <Form.Control
+                  type="number"
+                  step="0.01"
+                  name="precio_venta"
+                  value={productoEditar.precio_venta || ""}
+                  onChange={manejoCambioInputEdicion}
+                  required
+                />
+              </Form.Group>
+            </Col>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Stock *</Form.Label>
-            <Form.Control
-              type="number"
-              min="0"
-              name="stock"
-              value={productoEditar.stock || ""}
-              onChange={manejoCambioInputEdicion}
-              placeholder="0"
-              required
-            />
-          </Form.Group>
+            {/* Stock */}
+            <Col xs={12} md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>Stock *</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="stock"
+                  value={productoEditar.stock || ""}
+                  onChange={manejoCambioInputEdicion}
+                  required
+                />
+              </Form.Group>
+            </Col>
+
+            {/* Visualización de Imagen Actual */}
+            <Col xs={12}>
+              <Form.Group className="mb-3 text-center">
+                <Form.Label>Imagen actual</Form.Label>
+                {productoEditar.url_imagen ? (
+                  <div className="mb-2">
+                    <img
+                      src={productoEditar.url_imagen}
+                      alt="Producto actual"
+                      style={{ maxWidth: "120px", maxHeight: "120px", objectFit: "cover", borderRadius: "6px" }}
+                    />
+                  </div>
+                ) : (
+                  <p className="text-muted">Sin imagen</p>
+                )}
+              </Form.Group>
+            </Col>
+
+            {/* Input para Nueva Imagen */}
+            <Col xs={12}>
+              <Form.Group className="mb-3">
+                <Form.Label>Nueva imagen (opcional)</Form.Label>
+                <Form.Control
+                  type="file"
+                  accept="image/*"
+                  onChange={manejoCambioArchivoActualizar}
+                />
+                <Form.Text className="text-muted">
+                  Si seleccionas una nueva imagen, reemplazará la actual
+                </Form.Text>
+              </Form.Group>
+            </Col>
+          </Row>
         </Form>
       </Modal.Body>
 
       <Modal.Footer>
-        <Button
-          variant="secondary"
-          onClick={() => setMostrarModalEdicion(false)}
-          disabled={deshabilitado}
-        >
+        <Button variant="secondary" onClick={() => setMostrarModalEdicion(false)}>
           Cancelar
         </Button>
-
-        <Button
-          variant="primary"
-          onClick={handleActualizar}
-          disabled={
-            !productoEditar.nombre?.trim() ||
-            !productoEditar.categoria_id ||
-            deshabilitado
-          }
-        >
-          {deshabilitado ? "Actualizando..." : "Guardar Cambios"}
+        <Button variant="primary" onClick={handleActualizar} disabled={deshabilitado}>
+          Actualizar
         </Button>
       </Modal.Footer>
     </Modal>

@@ -1,92 +1,71 @@
-import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Button, Spinner, Alert } from "react-bootstrap"; // Alert añadido
+import React, { useEffect, useState } from "react";
+import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
-
 import ModalRegistroProducto from "../components/productos/ModalRegistroProducto";
-import ModalEdicionProducto from "../components/productos/ModalEdicionProducto";
-import ModalEliminacionProducto from "../components/productos/ModalEliminacionProducto";
+import NotificacionOperacion from "../components/NotificacionOperacion";
+import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import TablaProductos from "../components/productos/TablaProductos";
 import TarjetaProducto from "../components/productos/TarjetaProductos";
-import NotificacionOperacion from "../components/NotificacionOperacion";
-
-// NUEVOS COMPONENTES DE LÓGICA
-import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
-import Paginacion from "../components/ordenamiento/Paginacion";
+import Paginacion from "../components/Ordenamiento/Paginacion";
+import ModalEdicionProducto from "../components/productos/ModalEdicionProducto";
+import ModalEliminacionProducto from "../components/productos/ModalEliminacionProducto";
 
 const Productos = () => {
   const [productos, setProductos] = useState([]);
+  const [productosFiltrados, setProductosFiltrados] = useState([]);
   const [categorias, setCategorias] = useState([]);
+  const [textoBusqueda, setTextoBusqueda] = useState("");
   const [cargando, setCargando] = useState(true);
 
-  // --- NUEVOS ESTADOS: BÚSQUEDA Y PAGINACIÓN ---
-  const [productosFiltrados, setProductosFiltrados] = useState([]);
-  const [textoBusqueda, setTextoBusqueda] = useState("");
-  const [registrosPorPagina, establecerRegistrosPorPagina] = useState(5);
-  const [paginaActual, establecerPaginaActual] = useState(1);
-
-  const [toast, setToast] = useState({
-    mostrar: false,
-    mensaje: "",
-    tipo: "",
-  });
-
-  const [mostrarModalRegistro, setMostrarModalRegistro] = useState(false);
+  const [mostrarModal, setMostrarModal] = useState(false);
+  const [mostrarModalEliminacion, setMostrarModalEliminacion] = useState(false);
   const [mostrarModalEdicion, setMostrarModalEdicion] = useState(false);
-  const [mostrarModalEliminacion, setMostrarModalEliminacion] =
-    useState(false);
 
+  // Adaptado al esquema: nombre, precio_compra, precio_venta, stock
   const [nuevoProducto, setNuevoProducto] = useState({
     nombre: "",
-    categoria_id: "",
+    categoria_producto: "",
     precio_compra: "",
     precio_venta: "",
     stock: "",
+    url_imagen: "",
+    archivo: null,
   });
 
   const [productoEditar, setProductoEditar] = useState({
     id: "",
     nombre: "",
-    categoria_id: "",
+    categoria_producto: "",
     precio_compra: "",
     precio_venta: "",
     stock: "",
+    url_imagen: "",
+    archivo: null,
   });
 
   const [productoAEliminar, setProductoAEliminar] = useState(null);
+  const [toast, setToast] = useState({ mostrar: false, mensaje: "", tipo: "" });
 
-  useEffect(() => {
-    cargarProductos();
-    cargarCategorias();
-  }, []);
+  const [registrosPorPagina, establecerRegistrosPorPagina] = useState(10);
+  const [paginaActual, establecerPaginaActual] = useState(1);
 
-  const cargarProductos = async () => {
-    try {
-      setCargando(true);
+  const manejoCambioInput = (e) => {
+    const { name, value } = e.target;
+    setNuevoProducto((prev) => ({ ...prev, [name]: value }));
+  };
 
-      const { data, error } = await supabase
-        .from("productos")
-        .select(`
-          *,
-          categorias:categoria_id (
-            nombre_categoria
-          )
-        `)
-        .order("id", { ascending: true });
-
-      if (error) throw error;
-
-      setProductos(data || []);
-    } catch (error) {
-      console.error("Error al cargar productos:", error.message);
-
-      setToast({
-        mostrar: true,
-        mensaje: "Error al cargar los productos.",
-        tipo: "error",
-      });
-    } finally {
-      setCargando(false);
+  const manejoCambioArchivo = (e) => {
+    const archivo = e.target.files[0];
+    if (archivo && archivo.type.startsWith("image/")) {
+      setNuevoProducto((prev) => ({ ...prev, archivo }));
+    } else {
+      alert("Selecciona una imagen válida (JPG, PNG, etc.)");
     }
+  };
+
+  const manejarBusqueda = (e) => {
+    setTextoBusqueda(e.target.value);
+    establecerPaginaActual(1);
   };
 
   const cargarCategorias = async () => {
@@ -94,197 +73,177 @@ const Productos = () => {
       const { data, error } = await supabase
         .from("categorias")
         .select("*")
-        .order("nombre_categoria", { ascending: true });
-
+        .order("id", { ascending: true }); // id en lugar de id_categoria
       if (error) throw error;
-
       setCategorias(data || []);
-    } catch (error) {
-      console.error("Error al cargar categorías:", error.message);
-
-      setToast({
-        mostrar: true,
-        mensaje: "Error al cargar las categorías.",
-        tipo: "error",
-      });
+    } catch (err) {
+      console.error("Error al cargar categorías:", err);
     }
   };
 
-  // --- NUEVA LÓGICA: FILTRADO ---
-  useEffect(() => {
-    if (!textoBusqueda.trim()) {
-      setProductosFiltrados(productos);
-    } else {
-      const term = textoBusqueda.toLowerCase().trim();
-      const filtrados = productos.filter((prod) => {
-        const nombreProd = prod.nombre?.toLowerCase() || "";
-        const nombreCat = prod.categorias?.nombre_categoria?.toLowerCase() || "sin categoría";
-        return nombreProd.includes(term) || nombreCat.includes(term);
-      });
-      setProductosFiltrados(filtrados);
+  const cargarProductos = async () => {
+    try {
+      setCargando(true);
+      const { data, error } = await supabase
+        .from("productos")
+        .select("*, categorias(nombre_categoria)")
+        .order("id", { ascending: false }); // id en lugar de id_producto
+      if (error) throw error;
+      setProductos(data || []);
+    } catch (err) {
+      console.error("Error al cargar productos:", err);
+    } finally {
+      setCargando(false);
     }
-    establecerPaginaActual(1); // Resetear a pag 1 al buscar
-  }, [textoBusqueda, productos]);
-
-  // --- NUEVA LÓGICA: PAGINACIÓN ---
-  const productosPaginados = productosFiltrados.slice(
-    (paginaActual - 1) * registrosPorPagina,
-    paginaActual * registrosPorPagina
-  );
-
-  const manejarBusqueda = (e) => {
-    setTextoBusqueda(e.target.value);
-  };
-
-  const abrirModalEdicion = (producto) => {
-    setProductoEditar({
-      id: producto.id,
-      nombre: producto.nombre,
-      categoria_id: producto.categoria_id || "",
-      precio_compra: producto.precio_compra,
-      precio_venta: producto.precio_venta,
-      stock: producto.stock,
-    });
-
-    setMostrarModalEdicion(true);
-  };
-
-  const abrirModalEliminacion = (producto) => {
-    setProductoAEliminar(producto);
-    setMostrarModalEliminacion(true);
-  };
-
-  const manejoCambioInput = (e) => {
-    const { name, value } = e.target;
-
-    setNuevoProducto((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const manejoCambioInputEdicion = (e) => {
-    const { name, value } = e.target;
-
-    setProductoEditar((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
   };
 
   const agregarProducto = async () => {
-    if (
-      !nuevoProducto.nombre.trim() ||
-      !nuevoProducto.precio_compra ||
-      !nuevoProducto.precio_venta ||
-      nuevoProducto.stock === ""
-    ) {
-      setToast({
-        mostrar: true,
-        mensaje: "Debe completar todos los campos obligatorios.",
-        tipo: "advertencia",
-      });
-      return;
-    }
-
     try {
+      if (
+        !nuevoProducto.nombre.trim() ||
+        !nuevoProducto.categoria_producto ||
+        !nuevoProducto.precio_venta ||
+        !nuevoProducto.precio_compra ||
+        !nuevoProducto.stock ||
+        !nuevoProducto.archivo
+      ) {
+        setToast({
+          mostrar: true,
+          mensaje: "Completa todos los campos obligatorios",
+          tipo: "advertencia",
+        });
+        return;
+      }
+
+      setMostrarModal(false);
+      const nombreArchivo = `${Date.now()}_${nuevoProducto.archivo.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("imagenes_productos")
+        .upload(nombreArchivo, nuevoProducto.archivo);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("imagenes_productos")
+        .getPublicUrl(nombreArchivo);
+      const urlPublica = urlData.publicUrl;
+
       const { error } = await supabase.from("productos").insert([
         {
           nombre: nuevoProducto.nombre,
-          categoria_id:
-            nuevoProducto.categoria_id === ""
-              ? null
-              : Number(nuevoProducto.categoria_id),
-          precio_compra: Number(nuevoProducto.precio_compra),
-          precio_venta: Number(nuevoProducto.precio_venta),
-          stock: Number(nuevoProducto.stock),
+          categoria_producto: parseInt(nuevoProducto.categoria_producto),
+          precio_compra: parseFloat(nuevoProducto.precio_compra),
+          precio_venta: parseFloat(nuevoProducto.precio_venta),
+          stock: parseInt(nuevoProducto.stock),
+          url_imagen: urlPublica,
         },
       ]);
 
       if (error) throw error;
 
-      setToast({
-        mostrar: true,
-        mensaje: `Producto "${nuevoProducto.nombre}" registrado con éxito.`,
-        tipo: "exito",
-      });
-
       setNuevoProducto({
         nombre: "",
-        categoria_id: "",
+        categoria_producto: "",
         precio_compra: "",
         precio_venta: "",
         stock: "",
+        archivo: null,
       });
 
-      setMostrarModalRegistro(false);
+      setToast({ mostrar: true, mensaje: "Producto registrado correctamente", tipo: "exito" });
       await cargarProductos();
-    } catch (error) {
-      console.error("Error al registrar producto:", error.message);
+    } catch (err) {
+      console.error("Error al agregar producto:", err);
+      setToast({ mostrar: true, mensaje: "Error al registrar producto", tipo: "error" });
+    }
+  };
 
-      setToast({
-        mostrar: true,
-        mensaje: "Error al registrar el producto.",
-        tipo: "error",
-      });
+  const manejoCambioInputEdicion = (e) => {
+    const { name, value } = e.target;
+    setProductoEditar((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const manejoCambioArchivoActualizar = (e) => {
+    const archivo = e.target.files[0];
+    if (archivo && archivo.type.startsWith("image/")) {
+      setProductoEditar((prev) => ({ ...prev, archivo }));
+    } else {
+      alert("Selecciona una imagen válida (JPG, PNG, etc.)");
     }
   };
 
   const actualizarProducto = async () => {
-    if (
-      !productoEditar.nombre.trim() ||
-      !productoEditar.precio_compra ||
-      !productoEditar.precio_venta ||
-      productoEditar.stock === ""
-    ) {
-      setToast({
-        mostrar: true,
-        mensaje: "Debe completar todos los campos obligatorios.",
-        tipo: "advertencia",
-      });
-      return;
-    }
-
     try {
+      if (
+        !productoEditar.nombre.trim() ||
+        !productoEditar.categoria_producto ||
+        !productoEditar.precio_venta ||
+        !productoEditar.precio_compra ||
+        !productoEditar.stock
+      ) {
+        setToast({
+          mostrar: true,
+          mensaje: "Completa los campos obligatorios",
+          tipo: "advertencia",
+        });
+        return;
+      }
+
+      setMostrarModalEdicion(false);
+
+      let datosActualizados = {
+        nombre: productoEditar.nombre,
+        categoria_producto: parseInt(productoEditar.categoria_producto),
+        precio_compra: parseFloat(productoEditar.precio_compra),
+        precio_venta: parseFloat(productoEditar.precio_venta),
+        stock: parseInt(productoEditar.stock),
+        url_imagen: productoEditar.url_imagen,
+      };
+
+      if (productoEditar.archivo) {
+        const nombreArchivo = `${Date.now()}_${productoEditar.archivo.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("imagenes_productos")
+          .upload(nombreArchivo, productoEditar.archivo);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from("imagenes_productos")
+          .getPublicUrl(nombreArchivo);
+
+        datosActualizados.url_imagen = urlData.publicUrl;
+
+        if (productoEditar.url_imagen) {
+          const nombreAnterior = productoEditar.url_imagen.split("/").pop().split("?")[0];
+          await supabase.storage.from("imagenes_productos").remove([nombreAnterior]).catch(() => {});
+        }
+      }
+
       const { error } = await supabase
         .from("productos")
-        .update({
-          nombre: productoEditar.nombre,
-          categoria_id:
-            productoEditar.categoria_id === ""
-              ? null
-              : Number(productoEditar.categoria_id),
-          precio_compra: Number(productoEditar.precio_compra),
-          precio_venta: Number(productoEditar.precio_venta),
-          stock: Number(productoEditar.stock),
-        })
+        .update(datosActualizados)
         .eq("id", productoEditar.id);
 
       if (error) throw error;
-
-      setToast({
-        mostrar: true,
-        mensaje: `Producto "${productoEditar.nombre}" actualizado correctamente.`,
-        tipo: "exito",
-      });
-
-      setMostrarModalEdicion(false);
       await cargarProductos();
-    } catch (error) {
-      console.error("Error al actualizar producto:", error.message);
-
-      setToast({
-        mostrar: true,
-        mensaje: "Error al actualizar el producto.",
-        tipo: "error",
-      });
+      setToast({ mostrar: true, mensaje: "Producto actualizado correctamente", tipo: "exito" });
+    } catch (err) {
+      console.error("Error al actualizar:", err);
+      setToast({ mostrar: true, mensaje: "Error al actualizar producto", tipo: "error" });
     }
   };
 
   const eliminarProducto = async () => {
     if (!productoAEliminar) return;
-
     try {
+      setMostrarModalEliminacion(false);
+
+      if (productoAEliminar.url_imagen) {
+        const nombreArchivo = productoAEliminar.url_imagen.split("/").pop().split("?")[0];
+        await supabase.storage.from("imagenes_productos").remove([nombreArchivo]).catch(() => {});
+      }
+
       const { error } = await supabase
         .from("productos")
         .delete()
@@ -292,120 +251,116 @@ const Productos = () => {
 
       if (error) throw error;
 
-      setToast({
-        mostrar: true,
-        mensaje: `Producto "${productoAEliminar.nombre}" eliminado correctamente.`,
-        tipo: "exito",
-      });
-
-      setMostrarModalEliminacion(false);
       await cargarProductos();
-    } catch (error) {
-      console.error("Error al eliminar producto:", error.message);
-
-      setToast({
-        mostrar: true,
-        mensaje: "Error al eliminar el producto.",
-        tipo: "error",
-      });
+      setToast({ mostrar: true, mensaje: "Producto eliminado exitosamente.", tipo: "exito" });
+    } catch (err) {
+      console.error("Error al eliminar:", err);
+      setToast({ mostrar: true, mensaje: "Error al eliminar producto.", tipo: "error" });
     }
   };
 
+  useEffect(() => {
+    if (!textoBusqueda.trim()) {
+      setProductosFiltrados(productos);
+    } else {
+      const textoLower = textoBusqueda.toLowerCase().trim();
+      const filtrados = productos.filter((prod) => {
+        const nombre = prod.nombre?.toLowerCase() || "";
+        const precio = prod.precio_venta?.toString() || "";
+        return (
+          nombre.includes(textoLower) ||
+          precio.includes(textoLower)
+        );
+      });
+      setProductosFiltrados(filtrados);
+    }
+  }, [textoBusqueda, productos]);
+
+  useEffect(() => {
+    cargarCategorias();
+    cargarProductos();
+  }, []);
+
+  const productosPaginados = productosFiltrados.slice(
+    (paginaActual - 1) * registrosPorPagina,
+    paginaActual * registrosPorPagina
+  );
+
   return (
-    <Container className="mt-4">
-      {/* Cabecera */}
-      <Row className="align-items-center mb-4">
-        <Col>
-          <h3>
-            <i className="bi bi-box-seam me-2 text-primary"></i>
-            Gestión de Productos
+    <Container className="mt-3">
+      <Row className="align-items-center mb-3">
+        <Col className="d-flex align-items-center">
+          <h3 className="mb-0">
+            <i className="bi-bag-heart-fill me-2"></i> Productos
           </h3>
         </Col>
-
-        <Col className="text-end">
-          <Button variant="primary" onClick={() => setMostrarModalRegistro(true)}>
-            <i className="bi bi-plus-lg me-1"></i> Nuevo Producto
+        <Col xs={3} sm={5} md={5} lg={5} className="text-end">
+          <Button onClick={() => setMostrarModal(true)} size="md">
+            <i className="bi-plus-lg"></i>
+            <span className="d-none d-sm-inline ms-2">Nuevo Producto</span>
           </Button>
         </Col>
       </Row>
 
       <hr />
 
-      {/* CUADRO DE BÚSQUEDA */}
       <Row className="mb-4">
         <Col md={6} lg={5}>
           <CuadroBusquedas
             textoBusqueda={textoBusqueda}
             manejarCambioBusqueda={manejarBusqueda}
-            placeholder="Buscar por nombre o categoría..."
+            placeholder="Buscar por nombre o precio..."
           />
         </Col>
       </Row>
 
-      {/* MENSAJE SI NO HAY COINCIDENCIAS */}
-      {!cargando && textoBusqueda.trim() && productosFiltrados.length === 0 && (
-        <Alert variant="info" className="text-center">
-          <i className="bi bi-info-circle me-2"></i>
-          No se encontraron productos que coincidan con "{textoBusqueda}".
-        </Alert>
+      {!cargando && productosPaginados.length > 0 && (
+        <Row>
+          <Col xs={12} className="d-lg-none">
+            <TarjetaProducto
+              productos={productosPaginados}
+              abrirModalEdicion={(p) => { setProductoEditar(p); setMostrarModalEdicion(true); }}
+              abrirModalEliminacion={(p) => { setProductoAEliminar(p); setMostrarModalEliminacion(true); }}
+            />
+          </Col>
+          <Col lg={12} className="d-none d-lg-block">
+            <TablaProductos
+              productos={productosPaginados}
+              abrirModalEdicion={(p) => { setProductoEditar(p); setMostrarModalEdicion(true); }}
+              abrirModalEliminacion={(p) => { setProductoAEliminar(p); setMostrarModalEliminacion(true); }}
+            />
+          </Col>
+        </Row>
       )}
 
-      {/* Contenido Principal */}
-      {cargando ? (
-        <div className="text-center my-5 py-5">
-          <Spinner animation="border" variant="primary" />
-          <p className="mt-3 text-muted fw-bold">Cargando catálogo...</p>
-        </div>
-      ) : (
-        <>
-          {productosFiltrados.length > 0 && (
-            <>
-              <div className="d-lg-none">
-                <TarjetaProducto
-                  productos={productosPaginados} // Usar paginados
-                  abrirModalEdicion={abrirModalEdicion}
-                  abrirModalEliminacion={abrirModalEliminacion}
-                />
-              </div>
-
-              <div className="d-none d-lg-block">
-                <TablaProductos
-                  productos={productosPaginados} // Usar paginados
-                  abrirModalEdicion={abrirModalEdicion}
-                  abrirModalEliminacion={abrirModalEliminacion}
-                />
-              </div>
-
-              {/* COMPONENTE DE PAGINACIÓN */}
-              <Paginacion
-                registrosPorPagina={registrosPorPagina}
-                totalRegistros={productosFiltrados.length}
-                paginaActual={paginaActual}
-                establecerPaginaActual={establecerPaginaActual}
-                establecerRegistrosPorPagina={establecerRegistrosPorPagina}
-              />
-            </>
-          )}
-        </>
+      {!cargando && productosFiltrados.length > 0 && (
+        <Paginacion
+          registrosPorPagina={registrosPorPagina}
+          totalRegistros={productosFiltrados.length}
+          paginaActual={paginaActual}
+          establecerPaginaActual={establecerPaginaActual}
+          establecerRegistrosPorPagina={establecerRegistrosPorPagina}
+        />
       )}
 
-      {/* Modales */}
       <ModalRegistroProducto
-        mostrarModal={mostrarModalRegistro}
-        setMostrarModal={setMostrarModalRegistro}
+        mostrarModal={mostrarModal}
+        setMostrarModal={setMostrarModal}
         nuevoProducto={nuevoProducto}
-        categorias={categorias}
         manejoCambioInput={manejoCambioInput}
+        manejoCambioArchivo={manejoCambioArchivo}
         agregarProducto={agregarProducto}
+        categorias={categorias}
       />
 
       <ModalEdicionProducto
         mostrarModalEdicion={mostrarModalEdicion}
         setMostrarModalEdicion={setMostrarModalEdicion}
         productoEditar={productoEditar}
-        categorias={categorias}
         manejoCambioInputEdicion={manejoCambioInputEdicion}
+        manejoCambioArchivoActualizar={manejoCambioArchivoActualizar}
         actualizarProducto={actualizarProducto}
+        categorias={categorias}
       />
 
       <ModalEliminacionProducto
@@ -419,12 +374,7 @@ const Productos = () => {
         mostrar={toast.mostrar}
         mensaje={toast.mensaje}
         tipo={toast.tipo}
-        onCerrar={() =>
-          setToast((prev) => ({
-            ...prev,
-            mostrar: false,
-          }))
-        }
+        onCerrar={() => setToast({ ...toast, mostrar: false })}
       />
     </Container>
   );

@@ -1,19 +1,19 @@
 import React, { useState } from "react";
-import { Modal, Form, Button } from "react-bootstrap";
+import { Modal, Form, Button, Row, Col } from "react-bootstrap";
 
 const ModalRegistroProducto = ({
   mostrarModal,
   setMostrarModal,
   nuevoProducto,
-  categorias,
   manejoCambioInput,
+  manejoCambioArchivo,
   agregarProducto,
+  categorias,
 }) => {
   const [deshabilitado, setDeshabilitado] = useState(false);
 
-  const handleRegistrar = async () => {
+  const handleAgregar = async () => {
     if (deshabilitado) return;
-
     setDeshabilitado(true);
     await agregarProducto();
     setDeshabilitado(false);
@@ -24,102 +24,136 @@ const ModalRegistroProducto = ({
       show={mostrarModal}
       onHide={() => setMostrarModal(false)}
       backdrop="static"
-      keyboard={false}
       centered
+      size="lg"
     >
       <Modal.Header closeButton>
-        <Modal.Title>Agregar Producto</Modal.Title>
+        <Modal.Title>Nuevo Producto</Modal.Title>
       </Modal.Header>
 
       <Modal.Body>
         <Form>
-          <Form.Group className="mb-3">
-            <Form.Label>Nombre</Form.Label>
-            <Form.Control
-              type="text"
-              name="nombre"
-              value={nuevoProducto.nombre}
-              onChange={manejoCambioInput}
-              placeholder="Ingresa el nombre del producto"
-            />
-          </Form.Group>
+          <Row>
+            {/* Categoría */}
+            <Col xs={12} md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Categoría *</Form.Label>
+                <Form.Select
+                  name="categoria_producto"
+                  value={nuevoProducto.categoria_producto || ""}
+                  onChange={manejoCambioInput}
+                  required
+                >
+                  <option value="">Seleccione...</option>
+                  {categorias.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.nombre_categoria}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Categoría</Form.Label>
-            <Form.Select
-              name="categorias_id"
-              value={nuevoProducto.categorias_id}
-              onChange={manejoCambioInput}
-            >
-              <option value="">Selecciona una categoría</option>
+            {/* Nombre */}
+            <Col xs={12} md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Nombre *</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="nombre"
+                  value={nuevoProducto.nombre || ""}
+                  onChange={manejoCambioInput}
+                  placeholder="Nombre del producto"
+                  required
+                />
+              </Form.Group>
+            </Col>
 
-              {categorias.map((categoria) => (
-                <option key={categoria.id} value={categoria.id}>
-                  {categoria.nombre_categoria}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
+            {/* Precio de Compra */}
+            <Col xs={12} md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>Precio de compra *</Form.Label>
+                <Form.Control
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  name="precio_compra"
+                  value={nuevoProducto.precio_compra || ""}
+                  onChange={manejoCambioInput}
+                  placeholder="0.00"
+                  required
+                />
+              </Form.Group>
+            </Col>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Precio de Compra</Form.Label>
-            <Form.Control
-              type="number"
-              min="0"
-              step="0.01"
-              name="precio_compra"
-              value={nuevoProducto.precio_compra}
-              onChange={manejoCambioInput}
-              placeholder="0.00"
-            />
-          </Form.Group>
+            {/* Precio de Venta */}
+            <Col xs={12} md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>Precio de venta *</Form.Label>
+                <Form.Control
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  name="precio_venta"
+                  value={nuevoProducto.precio_venta || ""}
+                  onChange={manejoCambioInput}
+                  placeholder="0.00"
+                  required
+                />
+              </Form.Group>
+            </Col>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Precio de Venta</Form.Label>
-            <Form.Control
-              type="number"
-              min="0"
-              step="0.01"
-              name="precio_venta"
-              value={nuevoProducto.precio_venta}
-              onChange={manejoCambioInput}
-              placeholder="0.00"
-            />
-          </Form.Group>
+            {/* Stock */}
+            <Col xs={12} md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>Stock Inicial *</Form.Label>
+                <Form.Control
+                  type="number"
+                  min="0"
+                  name="stock"
+                  value={nuevoProducto.stock || ""}
+                  onChange={manejoCambioInput}
+                  placeholder="0"
+                  required
+                />
+              </Form.Group>
+            </Col>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Stock</Form.Label>
-            <Form.Control
-              type="number"
-              min="0"
-              name="stock"
-              value={nuevoProducto.stock}
-              onChange={manejoCambioInput}
-              placeholder="0"
-            />
-          </Form.Group>
+            {/* Imagen */}
+            <Col xs={12}>
+              <Form.Group className="mb-3">
+                <Form.Label>Imagen del producto *</Form.Label>
+                <Form.Control
+                  type="file"
+                  accept="image/*"
+                  onChange={manejoCambioArchivo}
+                  required
+                />
+              </Form.Group>
+            </Col>
+
+            {/* URL de Imagen (Opcional, si se prefiere pegar un link) */}
+            <Col xs={12}>
+              <Form.Group className="mb-3">
+                <Form.Label>URL de Imagen (Opcional)</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="url_imagen"
+                  value={nuevoProducto.url_imagen || ""}
+                  onChange={manejoCambioInput}
+                  placeholder="https://ejemplo.com/imagen.jpg"
+                />
+              </Form.Group>
+            </Col>
+          </Row>
         </Form>
       </Modal.Body>
 
       <Modal.Footer>
-        <Button
-          variant="secondary"
-          onClick={() => setMostrarModal(false)}
-        >
+        <Button variant="secondary" onClick={() => setMostrarModal(false)}>
           Cancelar
         </Button>
-
-        <Button
-          variant="primary"
-          onClick={handleRegistrar}
-          disabled={
-            nuevoProducto.nombre.trim() === "" ||
-            nuevoProducto.precio_compra === "" ||
-            nuevoProducto.precio_venta === "" ||
-            nuevoProducto.stock === "" ||
-            deshabilitado
-          }
-        >
+        <Button variant="primary" onClick={handleAgregar} disabled={deshabilitado}>
           Guardar
         </Button>
       </Modal.Footer>

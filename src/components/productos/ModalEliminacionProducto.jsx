@@ -11,11 +11,9 @@ const ModalEliminacionProducto = ({
 
   const handleEliminar = async () => {
     if (deshabilitado) return;
-
     setDeshabilitado(true);
-    await eliminarProducto(producto?.id);
+    await eliminarProducto();
     setDeshabilitado(false);
-    setMostrarModalEliminacion(false);
   };
 
   return (
@@ -29,31 +27,17 @@ const ModalEliminacionProducto = ({
       <Modal.Header closeButton>
         <Modal.Title>Confirmar Eliminación</Modal.Title>
       </Modal.Header>
-
       <Modal.Body>
-        ¿Estás seguro de que deseas eliminar el producto{" "}
-        <strong>"{producto?.nombre}"</strong>?
-        <br />
-        <small className="text-muted">
-          Esta acción no se puede deshacer.
-        </small>
+        ¿Estás seguro de que deseas eliminar el producto "
+        {/* Se cambió producto?.nombre_producto por producto?.nombre según la imagen image_496a40.png */}
+        <strong>{producto?.nombre}</strong>"?
       </Modal.Body>
-
       <Modal.Footer>
-        <Button
-          variant="secondary"
-          onClick={() => setMostrarModalEliminacion(false)}
-          disabled={deshabilitado}
-        >
+        <Button variant="secondary" onClick={() => setMostrarModalEliminacion(false)}>
           Cancelar
         </Button>
-
-        <Button
-          variant="danger"
-          onClick={handleEliminar}
-          disabled={deshabilitado}
-        >
-          {deshabilitado ? "Eliminando..." : "Eliminar"}
+        <Button variant="danger" onClick={handleEliminar} disabled={deshabilitado}>
+          Eliminar
         </Button>
       </Modal.Footer>
     </Modal>
