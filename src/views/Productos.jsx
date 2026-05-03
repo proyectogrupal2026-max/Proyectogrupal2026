@@ -6,7 +6,7 @@ import NotificacionOperacion from "../components/NotificacionOperacion";
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import TablaProductos from "../components/productos/TablaProductos";
 import TarjetaProducto from "../components/productos/TarjetaProductos";
-import Paginacion from "../components/ordenamiento";
+import Paginacion from "../components/ordenamiento/Paginacion";
 import ModalEdicionProducto from "../components/productos/ModalEdicionProducto";
 import ModalEliminacionProducto from "../components/productos/ModalEliminacionProducto";
 
