@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Button } from "react-bootstrap";
 
 const ModalEliminacionProveedor = ({
@@ -18,44 +18,114 @@ const ModalEliminacionProveedor = ({
     setMostrarModalEliminacion(false);
   };
 
+  // --- LÓGICA PARA CONFIRMAR CON ENTER ---
+  useEffect(() => {
+    const detectarEnter = (e) => {
+      if (mostrarModalEliminacion && e.key === "Enter" && !deshabilitado) {
+        handleEliminar();
+      }
+    };
+
+    if (mostrarModalEliminacion) {
+      window.addEventListener("keydown", detectarEnter);
+    }
+
+    return () => {
+      window.removeEventListener("keydown", detectarEnter);
+    };
+  }, [mostrarModalEliminacion, deshabilitado, proveedor]);
+
+  const estilos = {
+    modalContent: {
+      borderRadius: "15px",
+      border: "none",
+      boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+    },
+    header: {
+      borderBottom: "none",
+      padding: "25px 25px 10px 25px",
+    },
+    title: {
+      fontWeight: "800",
+      color: "#dc3545", // Color rojo para advertencia
+      fontSize: "1.8rem",
+    },
+    body: {
+      padding: "10px 25px 25px 25px",
+      fontSize: "1.2rem",
+      color: "#4a5568",
+    },
+    footer: {
+      borderTop: "none",
+      padding: "0 25px 25px 25px",
+      gap: "10px",
+    },
+    btnDanger: {
+      borderRadius: "10px",
+      padding: "12px 30px",
+      fontWeight: "700",
+      fontSize: "1.1rem",
+      boxShadow: "0 4px 6px rgba(220, 53, 69, 0.2)",
+    },
+    btnCancel: {
+      borderRadius: "10px",
+      padding: "12px 20px",
+      fontWeight: "600",
+      fontSize: "1.1rem",
+    }
+  };
+
   return (
     <Modal
       show={mostrarModalEliminacion}
       onHide={() => setMostrarModalEliminacion(false)}
       backdrop="static"
-      keyboard={false}
+      keyboard={true}
       centered
+      style={{ backdropFilter: "blur(6px)" }}
     >
-      <Modal.Header closeButton>
-        <Modal.Title>Confirmar Eliminación</Modal.Title>
-      </Modal.Header>
+      <div style={estilos.modalContent}>
+        <Modal.Header closeButton style={estilos.header}>
+          <Modal.Title style={estilos.title}>¿Eliminar Proveedor?</Modal.Title>
+        </Modal.Header>
 
-      <Modal.Body>
-        ¿Estás seguro de que deseas eliminar al proveedor{" "}
-        <strong>"{proveedor?.nombre}"</strong>?
-        <br />
-        <small className="text-muted">
-          Esta acción no se puede deshacer.
-        </small>
-      </Modal.Body>
+        <Modal.Body style={estilos.body}>
+          ¿Estás seguro de que deseas eliminar al proveedor{" "}
+          <strong className="text-dark">"{proveedor?.nombre}"</strong>?
+          <div className="mt-2">
+            <small className="text-muted" style={{ fontSize: "0.95rem" }}>
+              <i className="bi bi-exclamation-triangle-fill me-2"></i>
+              Esta acción no se puede deshacer.
+            </small>
+          </div>
+        </Modal.Body>
 
-      <Modal.Footer>
-        <Button
-          variant="secondary"
-          onClick={() => setMostrarModalEliminacion(false)}
-          disabled={deshabilitado}
-        >
-          Cancelar
-        </Button>
-
-        <Button
-          variant="danger"
-          onClick={handleEliminar}
-          disabled={deshabilitado}
-        >
-          {deshabilitado ? "Eliminando..." : "Eliminar"}
-        </Button>
-      </Modal.Footer>
+        <Modal.Footer style={estilos.footer}>
+          <Button
+            variant="light"
+            onClick={() => setMostrarModalEliminacion(false)}
+            disabled={deshabilitado}
+            style={estilos.btnCancel}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="danger"
+            onClick={handleEliminar}
+            disabled={deshabilitado}
+            style={estilos.btnDanger}
+          >
+            {deshabilitado ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Eliminando...
+              </>
+            ) : (
+              "Confirmar Eliminación"
+            )}
+          </Button>
+        </Modal.Footer>
+      </div>
     </Modal>
   );
 };

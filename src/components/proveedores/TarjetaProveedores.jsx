@@ -22,7 +22,6 @@ const TarjetaProveedor = ({
 
   useEffect(() => {
     window.addEventListener("keydown", manejarTeclaEscape);
-
     return () => {
       window.removeEventListener("keydown", manejarTeclaEscape);
     };
@@ -32,22 +31,83 @@ const TarjetaProveedor = ({
     setIdTarjetaActiva((anterior) => (anterior === id ? null : id));
   };
 
+  const estilos = {
+    card: {
+      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+      cursor: "pointer",
+      position: "relative",
+      overflow: "hidden",
+      border: "1px solid #edf2f7",
+    },
+    iconContainer: {
+      width: "45px",
+      height: "45px",
+      backgroundColor: "#f1f5f9",
+      color: "#64748b",
+      borderRadius: "12px",
+    },
+    overlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(255, 255, 255, 0.85)",
+      backdropFilter: "blur(4px)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 10,
+    },
+    btnEdit: {
+      width: "50px",
+      height: "50px",
+      borderRadius: "12px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      border: "none",
+      color: "#f59e0b",
+      backgroundColor: "#fffbeb",
+      fontSize: "1.2rem"
+    },
+    btnDelete: {
+      width: "50px",
+      height: "50px",
+      borderRadius: "12px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      border: "none",
+      color: "#ef4444",
+      backgroundColor: "#fef2f2",
+      fontSize: "1.2rem"
+    }
+  };
+
   return (
     <>
       {cargando ? (
         <div className="text-center my-5">
-          <h5>Cargando proveedores...</h5>
-          <Spinner animation="border" variant="success" role="status" />
+          <h5 className="text-muted fw-normal">Cargando proveedores...</h5>
+          <Spinner animation="border" variant="primary" role="status" />
         </div>
       ) : (
-        <div>
+        <div className="px-1">
           {proveedores.map((proveedor) => {
             const tarjetaActiva = idTarjetaActiva === proveedor.id;
 
             return (
               <Card
                 key={proveedor.id}
-                className="mb-3 border-0 rounded-3 shadow-sm w-100 tarjeta-categoria-contenedor"
+                style={{
+                  ...estilos.card,
+                  transform: tarjetaActiva ? "scale(0.98)" : "scale(1)",
+                  boxShadow: tarjetaActiva 
+                    ? "0 10px 15px -3px rgba(0, 0, 0, 0.1)" 
+                    : "0 4px 6px -1px rgba(0, 0, 0, 0.05)"
+                }}
+                className="mb-3 rounded-4 w-100"
                 onClick={() => alternarTarjetaActiva(proveedor.id)}
                 tabIndex={0}
                 onKeyDown={(evento) => {
@@ -58,35 +118,24 @@ const TarjetaProveedor = ({
                 }}
                 aria-label={`Proveedor ${proveedor.nombre}`}
               >
-                <Card.Body
-                  className={`p-2 tarjeta-categoria-cuerpo ${
-                    tarjetaActiva
-                      ? "tarjeta-categoria-cuerpo-activo"
-                      : "tarjeta-categoria-cuerpo-inactivo"
-                  }`}
-                >
+                <Card.Body className="p-3">
                   <Row className="align-items-center gx-3">
-                    <Col xs={2} className="px-2">
-                      <div className="bg-light d-flex align-items-center justify-content-center rounded tarjeta-categoria-placeholder-imagen">
-                        <i className="bi bi-truck text-muted fs-3"></i>
+                    <Col xs={3}>
+                      <div className="d-flex align-items-center justify-content-center" style={estilos.iconContainer}>
+                        <i className="bi bi-truck fs-4"></i>
                       </div>
                     </Col>
 
-                    <Col xs={6} className="text-start">
-                      <div className="fw-semibold text-truncate">
+                    <Col xs={9} className="text-start">
+                      <div className="fw-bold text-dark fs-5 text-truncate">
                         {proveedor.nombre}
                       </div>
-
                       <div className="small text-muted text-truncate">
+                        <i className="bi bi-telephone me-1"></i>
                         {proveedor.telefono || "Sin teléfono"}
                       </div>
-                    </Col>
-
-                    <Col
-                      xs={4}
-                      className="d-flex flex-column align-items-end justify-content-center text-end"
-                    >
-                      <div className="small text-muted text-truncate">
+                      <div className="small text-muted text-truncate mt-1">
+                        <i className="bi bi-geo-alt me-1"></i>
                         {proveedor.direccion || "Sin dirección"}
                       </div>
                     </Col>
@@ -97,38 +146,33 @@ const TarjetaProveedor = ({
                   <div
                     role="dialog"
                     aria-modal="true"
+                    style={estilos.overlay}
                     onClick={(e) => {
                       e.stopPropagation();
                       setIdTarjetaActiva(null);
                     }}
-                    className="tarjeta-categoria-capa"
                   >
-                    <div
-                      className="d-flex gap-2 tarjeta-categoria-botones-capa"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                    <div className="d-flex gap-3" onClick={(e) => e.stopPropagation()}>
                       <Button
-                        variant="outline-warning"
-                        size="sm"
+                        style={estilos.btnEdit}
                         onClick={() => {
                           abrirModalEdicion(proveedor);
                           setIdTarjetaActiva(null);
                         }}
                         aria-label={`Editar ${proveedor.nombre}`}
                       >
-                        <i className="bi bi-pencil"></i>
+                        <i className="bi bi-pencil-square"></i>
                       </Button>
 
                       <Button
-                        variant="outline-danger"
-                        size="sm"
+                        style={estilos.btnDelete}
                         onClick={() => {
                           abrirModalEliminacion(proveedor);
                           setIdTarjetaActiva(null);
                         }}
                         aria-label={`Eliminar ${proveedor.nombre}`}
                       >
-                        <i className="bi bi-trash"></i>
+                        <i className="bi bi-trash3-fill"></i>
                       </Button>
                     </div>
                   </div>
