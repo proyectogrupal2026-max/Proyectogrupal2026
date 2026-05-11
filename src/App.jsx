@@ -5,15 +5,15 @@ import Encabezado from "./components/navegacion/Encabezado";
 
 import Inicio from "./views/Inicio";
 import Categorias from "./views/Categorias";
-import Catalogo from "./views/Catalogo";
 import Productos from "./views/Productos";
 import Ventas from "./views/Ventas"; 
-import Compras from "./views/Compras"; // <-- NUEVA IMPORTACIÓN
+import Compras from "./views/Compras"; 
 import Login from "./views/Login";
 import Proveedores from "./views/Proveedores";
 import Perfiles from "./views/Perfiles";
 import RutaProtegida from "./components/rutas/RutaProtegida";
 import Pagina404 from "./views/Pagina404";
+import Catalogo from './views/Catalogo';
 
 import "./App.css";
 
@@ -27,9 +27,9 @@ const App = () => {
 
           <Route path="/" element={<RutaProtegida><Inicio /></RutaProtegida>} />
           <Route path="/categorias" element={<RutaProtegida><Categorias /></RutaProtegida>} />
-          <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/productos" element={<RutaProtegida><Productos /></RutaProtegida>} />
           <Route path="/ventas" element={<RutaProtegida><Ventas /></RutaProtegida>} />
+          <Route path="/catalogo" element={<RutaProtegida><Catalogo /></RutaProtegida>} />
           
           {/* RUTA PARA COMPRAS INTEGRADA */}
           <Route path="/compras" element={<RutaProtegida><Compras /></RutaProtegida>} />
