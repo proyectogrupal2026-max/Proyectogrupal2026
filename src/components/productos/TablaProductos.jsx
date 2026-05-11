@@ -7,7 +7,6 @@ const TablaProductos = ({
   abrirModalEdicion,
   abrirModalEliminacion
 }) => {
-
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,23 +17,56 @@ const TablaProductos = ({
     }
   }, [productos]);
 
+  const estilos = {
+    tablaContainer: {
+      backgroundColor: "#ffffff",
+      borderRadius: "15px",
+      overflow: "hidden",
+      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)"
+    },
+    header: {
+      backgroundColor: "#f8fafc",
+      color: "#64748b",
+      fontSize: "0.85rem",
+      fontWeight: "700",
+      padding: "15px"
+    },
+    row: {
+      borderBottom: "1px solid #f1f5f9",
+    },
+    btnAccion: {
+      width: "35px",
+      height: "35px",
+      borderRadius: "10px",
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      border: "none",
+    },
+    imgProducto: {
+      width: "55px",
+      height: "55px",
+      objectFit: "cover",
+      borderRadius: "12px",
+    }
+  };
+
   return (
-    <>
+    <div style={estilos.tablaContainer}>
       {loading ? (
-        <div className="text-center">
-          <h4>Cargando productos...</h4>
-          <Spinner animation="border" variant="primary" role="status" />
+        <div className="text-center my-5 py-5">
+          <Spinner animation="border" variant="primary" />
+          <h4 className="text-muted mt-3">Cargando productos...</h4>
         </div>
       ) : productos.length === 0 ? (
-        <div className="text-center">
+        <div className="text-center my-5 py-5">
           <h4>No hay productos registrados.</h4>
         </div>
       ) : (
-        <Table striped borderless hover responsive size="sm" className="align-middle">
-          <thead>
+        <Table striped borderless hover responsive size="sm" className="align-middle mb-0">
+          <thead style={estilos.header}>
             <tr>
               <th style={{ width: "90px" }} className="text-center">Imagen</th>
-              {/* Alineación consistente para el encabezado */}
               <th className="ps-3">Nombre</th>
               <th className="d-none d-md-table-cell">Categoría</th>
               <th>Stock</th>
@@ -45,16 +77,14 @@ const TablaProductos = ({
           </thead>
           <tbody>
             {productos.map((producto) => (
-              <tr key={producto.id}>
-                <td className="text-center">
+              <tr key={producto.id} style={estilos.row}>
+                <td className="text-center py-2">
                   <Image
                     src={producto.url_imagen}
                     alt={producto.nombre}
-                    rounded
-                    style={{ width: "55px", height: "55px", objectFit: "cover" }}
+                    style={estilos.imgProducto}
                   />
                 </td>
-                {/* Se añade ps-3 (padding start) para separarlo un poco de la imagen y centrarlo visualmente en su espacio */}
                 <td className="ps-3">{producto.nombre}</td>
                 <td className="d-none d-md-table-cell">
                   {producto.categorias?.nombre_categoria || producto.categoria_producto}
@@ -65,30 +95,28 @@ const TablaProductos = ({
                   ${parseFloat(producto.precio_compra).toFixed(2)}
                 </td>
                 <td className="text-center">
-                  <Button
-                    variant="outline-warning"
-                    size="sm"
-                    className="m-1"
-                    onClick={() => abrirModalEdicion(producto)}
-                  >
-                    <i className="bi bi-pencil"></i>
-                  </Button>
+                  <div className="d-flex justify-content-center gap-2">
+                    <Button
+                      style={{ backgroundColor: "#fffbeb", color: "#f59e0b", ...estilos.btnAccion }}
+                      onClick={() => abrirModalEdicion(producto)}
+                    >
+                      <i className="bi bi-pencil"></i>
+                    </Button>
 
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    className="m-1"
-                    onClick={() => abrirModalEliminacion(producto)}
-                  >
-                    <i className="bi bi-trash"></i>
-                  </Button>
+                    <Button
+                      style={{ backgroundColor: "#fef2f2", color: "#ef4444", ...estilos.btnAccion }}
+                      onClick={() => abrirModalEliminacion(producto)}
+                    >
+                      <i className="bi bi-trash"></i>
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </Table>
       )}
-    </>
+    </div>
   );
 };
 
