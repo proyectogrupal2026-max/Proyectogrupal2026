@@ -110,7 +110,17 @@ const ModalEdicionProveedor = ({
     footer: {
       borderTop: "none",
       padding: "0 25px 25px 25px",
+      display: "flex",       // Asegura que los botones se alineen horizontalmente
+      flexDirection: "row",  // Mantiene la fila en móvil
+      flexWrap: "nowrap",    // Evita el salto de línea en pantallas pequeñas
+      justifyContent: "flex-end",
       gap: "10px",
+    },
+    btnCancel: {
+      borderRadius: "10px", 
+      padding: "10px 20px", 
+      fontWeight: "600",
+      whiteSpace: "nowrap",  // Evita que el texto se rompa en dos líneas
     },
     btnPrimary: {
       borderRadius: "10px",
@@ -119,6 +129,7 @@ const ModalEdicionProveedor = ({
       backgroundColor: "#007bff",
       border: "none",
       fontSize: "1.1rem",
+      whiteSpace: "nowrap", // Evita que el texto se rompa en dos líneas
     }
   };
 
@@ -155,6 +166,7 @@ const ModalEdicionProveedor = ({
               <Form.Label style={estilos.label}>Teléfono</Form.Label>
               <Form.Control
                 type="text"
+                inputMode="numeric" // Activa automáticamente el teclado numérico en móviles
                 name="telefono"
                 value={proveedorEditar.telefono || ""}
                 onChange={validarTelefono}
@@ -185,7 +197,7 @@ const ModalEdicionProveedor = ({
               variant="light"
               onClick={() => setMostrarModalEdicion(false)}
               disabled={deshabilitado}
-              style={{ borderRadius: "10px", padding: "10px 20px", fontWeight: "600" }}
+              style={estilos.btnCancel}
             >
               Cancelar
             </Button>

@@ -10,7 +10,6 @@ const ModalRegistroProveedor = ({
 }) => {
   const [deshabilitado, setDeshabilitado] = useState(false);
 
-  // Validación para permitir solo letras y espacios
   const validarSoloLetras = (e) => {
     const { value } = e.target;
     const patron = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/;
@@ -19,22 +18,17 @@ const ModalRegistroProveedor = ({
     }
   };
 
-  // --- VALIDACIÓN PARA TELÉFONO CON FORMATO 0000-0000 ---
   const validarTelefono = (e) => {
     let { value } = e.target;
-    
-    // Eliminar todo lo que no sea número para procesar la longitud real
     const numeros = value.replace(/\D/g, "");
 
     if (numeros.length <= 8) {
-      // Si tiene más de 4 números, insertamos el guion
       if (numeros.length > 4) {
         value = `${numeros.slice(0, 4)}-${numeros.slice(4)}`;
       } else {
         value = numeros;
       }
       
-      // Creamos un evento sintético para pasarlo al manejador original
       const eventoSintetico = {
         target: {
           name: e.target.name,
@@ -105,16 +99,28 @@ const ModalRegistroProveedor = ({
     },
     footer: {
       borderTop: "none",
-      padding: "0 25px 25px 25px",
-      gap: "10px",
+      padding: "15px 25px 25px 25px",
+      display: "flex", 
+      flexDirection: "row", // Fuerza la dirección horizontal
+      flexWrap: "nowrap",   // Evita que se bajen en pantallas pequeñas
+      justifyContent: "flex-end", 
+      gap: "8px",
+    },
+    btnCancel: {
+      borderRadius: "10px", 
+      padding: "10px 15px", // Reducido un poco para móvil
+      fontWeight: "600",
+      fontSize: "1rem",
+      whiteSpace: "nowrap" // Evita que el texto del botón se rompa
     },
     btnPrimary: {
       borderRadius: "10px",
-      padding: "12px 30px",
+      padding: "12px 20px", // Ajustado para móvil
       fontWeight: "700",
       backgroundColor: "#007bff",
       border: "none",
-      fontSize: "1.1rem",
+      fontSize: "1rem",
+      whiteSpace: "nowrap" // Evita que el texto del botón se rompa
     }
   };
 
@@ -152,6 +158,7 @@ const ModalRegistroProveedor = ({
               <Form.Label style={estilos.label}>Teléfono</Form.Label>
               <Form.Control
                 type="text"
+                inputMode="numeric"
                 name="telefono"
                 value={nuevoProveedor.telefono}
                 onChange={validarTelefono}
@@ -183,7 +190,7 @@ const ModalRegistroProveedor = ({
             <Button
               variant="light"
               onClick={() => setMostrarModal(false)}
-              style={{ borderRadius: "10px", padding: "10px 20px", fontWeight: "600" }}
+              style={estilos.btnCancel}
             >
               Cancelar
             </Button>

@@ -268,9 +268,10 @@ const Proveedores = () => {
           </h3>
         </Col>
 
-        <Col className="text-end">
-          <Button variant="primary" onClick={() => setMostrarModalRegistro(true)}>
-            <i className="bi bi-plus-lg me-1"></i> Nuevo Proveedor
+        <Col xs={3} sm={5} md={5} lg={5} className="text-end">
+          <Button  onClick={() => setMostrarModalRegistro(true)}size="md">
+            <i className="bi-plus-lg"></i>  
+            <span className="d-none d-sm-inline ms-2">Nuevo Proveedor</span>
           </Button>
         </Col>
       </Row>

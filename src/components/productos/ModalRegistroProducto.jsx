@@ -19,7 +19,6 @@ const ModalRegistroProducto = ({
     setDeshabilitado(false);
   };
 
-  // Manejador para enviar el formulario con la tecla Enter
   const manejarKeyDown = (e) => {
     if (e.key === "Enter" && !deshabilitado) {
       e.preventDefault();
@@ -59,23 +58,30 @@ const ModalRegistroProducto = ({
       borderTop: "1px solid #f1f5f9",
       padding: "15px 25px 25px 25px",
       display: "flex",
-      gap: "12px",
+      flexDirection: "row", // Alineación horizontal
+      flexWrap: "nowrap",   // Evita que se apilen en móvil
+      justifyContent: "flex-end",
+      gap: "10px",
     },
     btnCancel: {
       borderRadius: "12px",
-      padding: "10px 25px",
+      padding: "10px 20px",
       fontWeight: "600",
       border: "none",
       backgroundColor: "#f1f5f9",
       color: "#475569",
+      fontSize: "0.95rem",
+      whiteSpace: "nowrap",
     },
     btnSave: {
       borderRadius: "12px",
-      padding: "10px 25px",
+      padding: "10px 20px",
       fontWeight: "700",
       backgroundColor: "#3b82f6",
       border: "none",
       boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+      fontSize: "0.95rem",
+      whiteSpace: "nowrap",
     }
   };
 

@@ -19,7 +19,7 @@ const ModalRegistroCategoria = ({
   };
 
   const handleRegistrar = async (e) => {
-    if (e) e.preventDefault(); // Previene recarga si se dispara desde el Form
+    if (e) e.preventDefault(); 
     if (deshabilitado || nuevaCategoria.nombre_categoria.trim() === "") return;
     
     setDeshabilitado(true);
@@ -27,11 +27,9 @@ const ModalRegistroCategoria = ({
     setDeshabilitado(false);
   };
 
-  // --- LÓGICA PARA DETECTAR ENTER EN TODO EL MODAL ---
   useEffect(() => {
     const detectarEnter = (e) => {
       if (mostrarModal && e.key === "Enter" && !deshabilitado) {
-        // Solo registra si el campo nombre no está vacío
         if (nuevaCategoria.nombre_categoria.trim() !== "") {
           handleRegistrar();
         }
@@ -52,6 +50,7 @@ const ModalRegistroCategoria = ({
       borderRadius: "15px",
       border: "none",
       boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+      overflow: "hidden",
     },
     header: {
       borderBottom: "none",
@@ -80,8 +79,13 @@ const ModalRegistroCategoria = ({
     },
     footer: {
       borderTop: "none",
-      padding: "0 25px 25px 25px",
+      padding: "0 15px 25px 25px", // Ajustado para pegar a la derecha
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "nowrap",
+      justifyContent: "flex-end",
       gap: "10px",
+      margin: "0",
     },
     btnPrimary: {
       borderRadius: "10px",
@@ -90,6 +94,16 @@ const ModalRegistroCategoria = ({
       backgroundColor: "#007bff",
       border: "none",
       fontSize: "1.1rem",
+      whiteSpace: "nowrap",
+    },
+    btnCancel: {
+      borderRadius: "10px", 
+      padding: "10px 20px", 
+      fontWeight: "600",
+      whiteSpace: "nowrap",
+      border: "1px solid #e2e8f0",
+      backgroundColor: "#f8fafc",
+      color: "#475569",
     }
   };
 
@@ -142,7 +156,7 @@ const ModalRegistroCategoria = ({
             <Button 
               variant="light" 
               onClick={() => setMostrarModal(false)}
-              style={{ borderRadius: "10px", padding: "10px 20px", fontWeight: "600" }}
+              style={estilos.btnCancel}
             >
               Cancelar
             </Button>

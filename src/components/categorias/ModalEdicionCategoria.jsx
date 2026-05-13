@@ -61,6 +61,7 @@ const ModalEdicionCategoria = ({
       borderRadius: "15px",
       border: "none",
       boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+      overflow: "hidden",
     },
     header: {
       borderBottom: "none",
@@ -89,8 +90,13 @@ const ModalEdicionCategoria = ({
     },
     footer: {
       borderTop: "none",
-      padding: "0 25px 25px 25px",
+      padding: "0 15px 25px 25px", // Ajustado para pegar a la derecha
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "nowrap",
+      justifyContent: "flex-end",
       gap: "10px",
+      margin: "0",
     },
     btnPrimary: {
       borderRadius: "10px",
@@ -99,6 +105,16 @@ const ModalEdicionCategoria = ({
       backgroundColor: "#007bff",
       border: "none",
       fontSize: "1.1rem",
+      whiteSpace: "nowrap",
+    },
+    btnCancel: {
+      borderRadius: "10px",
+      padding: "10px 20px",
+      fontWeight: "600",
+      whiteSpace: "nowrap",
+      backgroundColor: "#f8fafc",
+      border: "1px solid #e2e8f0",
+      color: "#475569",
     }
   };
 
@@ -152,7 +168,7 @@ const ModalEdicionCategoria = ({
               variant="light"
               onClick={() => setMostrarModalEdicion(false)}
               disabled={deshabilitado}
-              style={{ borderRadius: "10px", padding: "10px 20px", fontWeight: "600" }}
+              style={estilos.btnCancel}
             >
               Cancelar
             </Button>

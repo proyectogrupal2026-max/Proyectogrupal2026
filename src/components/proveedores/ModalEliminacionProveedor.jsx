@@ -18,7 +18,6 @@ const ModalEliminacionProveedor = ({
     setMostrarModalEliminacion(false);
   };
 
-  // --- LÓGICA PARA CONFIRMAR CON ENTER ---
   useEffect(() => {
     const detectarEnter = (e) => {
       if (mostrarModalEliminacion && e.key === "Enter" && !deshabilitado) {
@@ -40,6 +39,7 @@ const ModalEliminacionProveedor = ({
       borderRadius: "15px",
       border: "none",
       boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+      overflow: "hidden",
     },
     header: {
       borderBottom: "none",
@@ -47,7 +47,7 @@ const ModalEliminacionProveedor = ({
     },
     title: {
       fontWeight: "800",
-      color: "#dc3545", // Color rojo para advertencia
+      color: "#dc3545",
       fontSize: "1.8rem",
     },
     body: {
@@ -57,21 +57,31 @@ const ModalEliminacionProveedor = ({
     },
     footer: {
       borderTop: "none",
-      padding: "0 25px 25px 25px",
+      padding: "0 15px 25px 15px", // Reducido el padding lateral para pegar los botones más a la derecha
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "nowrap",
+      justifyContent: "flex-end", // Alineación total a la derecha
       gap: "10px",
+      margin: "0",
     },
     btnDanger: {
       borderRadius: "10px",
-      padding: "12px 30px",
+      padding: "12px 25px",
       fontWeight: "700",
-      fontSize: "1.1rem",
+      fontSize: "1rem",
       boxShadow: "0 4px 6px rgba(220, 53, 69, 0.2)",
+      whiteSpace: "nowrap",
     },
     btnCancel: {
       borderRadius: "10px",
       padding: "12px 20px",
       fontWeight: "600",
-      fontSize: "1.1rem",
+      fontSize: "1rem",
+      whiteSpace: "nowrap",
+      backgroundColor: "#f8fafc",
+      border: "1px solid #e2e8f0",
+      color: "#475569",
     }
   };
 

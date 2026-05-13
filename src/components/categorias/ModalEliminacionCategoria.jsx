@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; // Añadimos useEffect
+import React, { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 
 const ModalEliminacionCategoria = ({
@@ -19,7 +19,6 @@ const ModalEliminacionCategoria = ({
     setMostrarModalEliminacion(false); 
   };
 
-  // --- NUEVA LÓGICA PARA DETECTAR ENTER EN TODO EL MODAL ---
   useEffect(() => {
     const detectarEnter = (e) => {
       if (mostrarModalEliminacion && e.key === "Enter" && !deshabilitado) {
@@ -35,13 +34,13 @@ const ModalEliminacionCategoria = ({
       window.removeEventListener("keydown", detectarEnter);
     };
   }, [mostrarModalEliminacion, deshabilitado, categoria]); 
-  // -------------------------------------------------------
 
   const estilos = {
     modalContent: {
       borderRadius: "15px",
       border: "none",
       boxShadow: "0 10px 40px rgba(220, 53, 69, 0.15)",
+      overflow: "hidden",
     },
     header: {
       borderBottom: "none",
@@ -67,8 +66,13 @@ const ModalEliminacionCategoria = ({
     },
     footer: {
       borderTop: "none",
-      padding: "0 25px 25px 25px",
+      padding: "0 12px 25px 25px", // Reducido el padding derecho de 15px a 12px para moverlos más a la derecha
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "nowrap",
+      justifyContent: "flex-end",
       gap: "12px",
+      margin: "0 -5px 0 0", // Margen negativo sutil a la derecha para el empuje final
     },
     btnDanger: {
       borderRadius: "10px",
@@ -78,6 +82,7 @@ const ModalEliminacionCategoria = ({
       border: "none",
       fontSize: "1.1rem",
       boxShadow: "0 4px 12px rgba(220, 53, 69, 0.2)",
+      whiteSpace: "nowrap",
     },
     btnSecondary: {
       borderRadius: "10px",
@@ -87,6 +92,7 @@ const ModalEliminacionCategoria = ({
       color: "#6c757d",
       border: "1px solid #dee2e6",
       fontSize: "1.1rem",
+      whiteSpace: "nowrap",
     }
   };
 
