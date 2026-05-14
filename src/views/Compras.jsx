@@ -3,6 +3,7 @@ import { Container, Table, Button, Card, Badge, Pagination, Row, Col } from "rea
 import { supabase } from "../database/supabaseconfig";
 import ModalRegistrarCompra from "../components/compras/ModalRegistrarCompra";
 import ModalDetalleCompra from "../components/compras/ModalDetalleCompra";
+import NotificacionOperacion from "../components/NotificacionOperacion";
 
 // IMPORTAMOS TU COMPONENTE PERSONALIZADO DE BÚSQUEDA
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
