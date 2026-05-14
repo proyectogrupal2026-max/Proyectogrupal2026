@@ -210,19 +210,35 @@ const Perfiles = () => {
   return (
     <Container className="mt-4">
       {/* Cabecera */}
-      <Row className="align-items-center mb-4">
-        <Col>
-          <h3>
+      <div className="d-flex align-items-center justify-content-between mb-4 mt-2">
+        {/* Contenedor del Título - El minWidth evita que el texto empuje el botón fuera de la pantalla */}
+        <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+          <h3 className="mb-0 fw-bold">
             <i className="bi bi-person-badge-fill me-2 text-primary"></i>
-            Personal de Ferretería
+            <span className="text-truncate">Personal de Ferretería</span>
           </h3>
-        </Col>
-        <Col className="text-end">
-          <Button variant="primary" onClick={() => setMostrarModalRegistro(true)}>
-            <i className="bi bi-plus-circle me-1"></i> Nuevo Empleado
+        </div>
+
+        {/* Contenedor del Botón */}
+        <div className="ms-2">
+          <Button
+            variant="primary"
+            onClick={() => setMostrarModalRegistro(true)}
+            className="d-flex align-items-center justify-content-center shadow-sm px-3"
+            style={{
+              height: '42px',
+              borderRadius: '10px',
+              minWidth: '45px'
+            }}
+          >
+            <i className="bi bi-plus-lg"></i>
+            {/* El texto aparece de 'sm' en adelante para estirar el botón en PC */}
+            <span className="d-none d-sm-inline ms-2 fw-semibold" style={{ whiteSpace: 'nowrap' }}>
+              Nuevo Usuario
+            </span>
           </Button>
-        </Col>
-      </Row>
+        </div>
+      </div>
 
       <hr />
 

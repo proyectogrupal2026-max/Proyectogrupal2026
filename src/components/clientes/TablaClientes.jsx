@@ -2,22 +2,17 @@ import React, { useState, useEffect } from "react";
 import { Table, Spinner, Button } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
-const TablaCategorias = ({
-  categorias,
+const TablaClientes = ({
+  clientes,
   abrirModalEdicion,
   abrirModalEliminacion,
 }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (categorias && categorias.length > 0) {
-      setLoading(false);
-    } else {
-      setLoading(true);
-    }
-  }, [categorias]);
+    setLoading(!(clientes && clientes.length > 0));
+  }, [clientes]);
 
-  // Estilos modernos, centrados y unificados para la tabla
   const estilos = {
     contenedorTabla: {
       backgroundColor: "#ffffff",
@@ -58,30 +53,29 @@ const TablaCategorias = ({
       {loading ? (
         <div className="text-center my-5 py-5">
           <Spinner animation="border" variant="primary" role="status" />
-          <h4 className="text-muted mt-3 fw-semibold">Cargando categorías...</h4>
+          <h4 className="text-muted mt-3 fw-semibold">Cargando clientes...</h4>
         </div>
       ) : (
         <Table borderless hover responsive className="align-middle mb-0 text-center" style={{ tableLayout: 'fixed', width: '100%' }}>
           <thead style={estilos.encabezado} className="bg-light border-bottom">
             <tr className="text-secondary text-uppercase">
               <th className="py-4" style={{ width: "15%" }}>ID</th>
-              <th className="py-4" style={{ width: "35%" }}>Nombre Categoría</th>
-              <th className="d-none d-md-table-cell py-4" style={{ width: "35%" }}>Descripción</th>
+              <th className="py-4" style={{ width: "35%" }}>Nombre Completo</th>
+              <th className="d-none d-md-table-cell py-4" style={{ width: "35%" }}>Teléfono</th>
               <th className="py-4" style={{ width: "15%" }}>Acciones</th>
             </tr>
           </thead>
           <tbody style={{ fontSize: '1rem' }}>
-            {/* Renderiza el arreglo exactamente en el orden correcto que viene del padre */}
-            {categorias.map((categoria) => (
-              <tr key={categoria.id} style={estilos.fila}>
+            {clientes.map((cliente) => (
+              <tr key={cliente.id} style={estilos.fila}>
                 <td className="py-3 fw-bold text-primary" style={{ fontSize: '1.1rem' }}>
-                  #{categoria.id}
+                  #{cliente.id}
                 </td>
                 <td className="py-3 fw-bold text-dark">
-                  {categoria.nombre_categoria}
+                  {cliente.nombre} {cliente.apellido}
                 </td>
                 <td className="d-none d-md-table-cell py-3 text-muted">
-                  {categoria.descripcion_categoria || "Sin descripción"}
+                  {cliente.telefono || "Sin teléfono"}
                 </td>
                 <td className="py-3">
                   <div style={estilos.celdaAcciones}>
@@ -94,7 +88,7 @@ const TablaCategorias = ({
                         border: "1px solid #fef3c7"
                       }}
                       className="shadow-sm"
-                      onClick={() => abrirModalEdicion(categoria)}
+                      onClick={() => abrirModalEdicion(cliente)}
                       title="Editar"
                     >
                       <i className="bi bi-pencil-square fs-6"></i>
@@ -109,7 +103,7 @@ const TablaCategorias = ({
                         border: "1px solid #fee2e2"
                       }}
                       className="shadow-sm"
-                      onClick={() => abrirModalEliminacion(categoria)}
+                      onClick={() => abrirModalEliminacion(cliente)}
                       title="Eliminar"
                     >
                       <i className="bi bi-trash3 fs-6"></i>
@@ -125,4 +119,4 @@ const TablaCategorias = ({
   );
 };
 
-export default TablaCategorias;
+export default TablaClientes;

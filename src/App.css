@@ -3,11 +3,13 @@
   padding: 20px;
 }
 
-.color-navbar{
-  background-color: aqua !important;
-  background-image: linear-gradient(90deg,#121696 0%,#288966 50%,#2697cc 100%);
+.color-navbar {
+  background-color: #add8e6 !important; 
+  /* Fluye de un celeste pastel suave a un esmeralda vibrante */
+  background-image: linear-gradient(90deg, #add8e6 0%, #00d2ff 40%, #00b09b 100%) !important;
+  border-bottom: 2px solid #00d2ff !important;
+  box-shadow: 0 4px 10px rgba(0, 210, 255, 0.2) !important;
 }
-
 .color-texto-marca {
   color: #1e3d87 !important;
   font-size: 18px;

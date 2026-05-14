@@ -86,6 +86,10 @@ const Encabezado = () => {
             {mostrarMenu ? <i className="bi-images me-2"></i> : null} <strong>Catálogo</strong>
           </Nav.Link>
 
+          <Nav.Link onClick={() => manejarNavegacion("/clientes")} className={mostrarMenu ? "color-texto-marca" : "text-black"}>
+            {mostrarMenu ? <i className="bi-people-fill me-2"></i> : null} <strong>Clientes</strong>
+          </Nav.Link>
+
           <hr />
 
           {!mostrarMenu && (
@@ -119,7 +123,7 @@ const Encabezado = () => {
           style={{ cursor: "pointer" }}
         >
           <img alt="Logo" src={logo} width="40" height="40" className="d-inline-block me-2" />
-          <h5 className="mb-0 fw-bold">Martita Tools</h5>
+          <h5 className="mb-0 fw-bold">MartitaTools</h5>
         </Navbar.Brand>
 
         {!esLogin && (

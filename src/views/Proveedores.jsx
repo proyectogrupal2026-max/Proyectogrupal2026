@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Button, Spinner, Alert } from "react-bootstrap"; // Alert añadido
+import { Container, Row, Col, Button, Spinner, Alert } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
 
 import ModalRegistroProveedor from "../components/proveedores/ModalRegistroProveedores";
@@ -32,8 +32,7 @@ const Proveedores = () => {
 
   const [mostrarModalRegistro, setMostrarModalRegistro] = useState(false);
   const [mostrarModalEdicion, setMostrarModalEdicion] = useState(false);
-  const [mostrarModalEliminacion, setMostrarModalEliminacion] =
-    useState(false);
+  const [mostrarModalEliminacion, setMostrarModalEliminacion] = useState(false);
 
   const [nuevoProveedor, setNuevoProveedor] = useState({
     nombre: "",
@@ -61,7 +60,7 @@ const Proveedores = () => {
       const { data, error } = await supabase
         .from("proveedores")
         .select("*")
-        .order("id", { ascending: true });
+        .order("id", { ascending: false }); // <-- CORREGIDO: Los últimos registros salen de primero
 
       if (error) throw error;
 
@@ -159,7 +158,18 @@ const Proveedores = () => {
         },
       ]);
 
-      if (error) throw error;
+      if (error) {
+        // Captura si el proveedor ya existe en la base de datos (Unique Violation)
+        if (error.code === "23505") {
+          setToast({
+            mostrar: true,
+            mensaje: `El proveedor "${nuevoProveedor.nombre}" ya está registrado.`,
+            tipo: "advertencia",
+          });
+          return;
+        }
+        throw error;
+      }
 
       setToast({
         mostrar: true,
@@ -260,21 +270,31 @@ const Proveedores = () => {
   return (
     <Container className="mt-4">
       {/* Cabecera */}
-      <Row className="align-items-center mb-4">
-        <Col>
-          <h3>
+      <div className="d-flex align-items-center justify-content-between mb-4 mt-2">
+        <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+          <h3 className="mb-0 fw-bold">
             <i className="bi bi-truck me-2 text-primary"></i>
-            Gestión de Proveedores
+            <span className="text-truncate">Gestión de Proveedores</span>
           </h3>
-        </Col>
+        </div>
 
-        <Col xs={3} sm={5} md={5} lg={5} className="text-end">
-          <Button  onClick={() => setMostrarModalRegistro(true)}size="md">
-            <i className="bi-plus-lg"></i>  
-            <span className="d-none d-sm-inline ms-2">Nuevo Proveedor</span>
+        <div className="ms-2">
+          <Button
+            onClick={() => setMostrarModalRegistro(true)}
+            className="d-flex align-items-center justify-content-center shadow-sm px-3"
+            style={{ 
+              height: '42px', 
+              borderRadius: '10px',
+              minWidth: '45px'
+            }}
+          >
+            <i className="bi bi-plus-lg"></i>
+            <span className="d-none d-sm-inline ms-2 fw-semibold" style={{ whiteSpace: 'nowrap' }}>
+              Nuevo Proveedor
+            </span>
           </Button>
-        </Col>
-      </Row>
+        </div>
+      </div>
 
       <hr />
 
@@ -309,7 +329,7 @@ const Proveedores = () => {
             <>
               <div className="d-lg-none">
                 <TarjetaProveedor
-                  proveedores={proveedoresPaginados} // Usar paginados
+                  proveedores={proveedoresPaginados}
                   abrirModalEdicion={abrirModalEdicion}
                   abrirModalEliminacion={abrirModalEliminacion}
                 />
@@ -317,7 +337,7 @@ const Proveedores = () => {
 
               <div className="d-none d-lg-block">
                 <TablaProveedores
-                  proveedores={proveedoresPaginados} // Usar paginados
+                  proveedores={proveedoresPaginados}
                   abrirModalEdicion={abrirModalEdicion}
                   abrirModalEliminacion={abrirModalEliminacion}
                 />

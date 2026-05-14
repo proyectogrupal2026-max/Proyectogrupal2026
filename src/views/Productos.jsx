@@ -216,7 +216,7 @@ const Productos = () => {
 
         if (productoEditar.url_imagen) {
           const nombreAnterior = productoEditar.url_imagen.split("/").pop().split("?")[0];
-          await supabase.storage.from("imagenes_productos").remove([nombreAnterior]).catch(() => {});
+          await supabase.storage.from("imagenes_productos").remove([nombreAnterior]).catch(() => { });
         }
       }
 
@@ -241,7 +241,7 @@ const Productos = () => {
 
       if (productoAEliminar.url_imagen) {
         const nombreArchivo = productoAEliminar.url_imagen.split("/").pop().split("?")[0];
-        await supabase.storage.from("imagenes_productos").remove([nombreArchivo]).catch(() => {});
+        await supabase.storage.from("imagenes_productos").remove([nombreArchivo]).catch(() => { });
       }
 
       const { error } = await supabase
@@ -288,19 +288,33 @@ const Productos = () => {
 
   return (
     <Container className="mt-3">
-      <Row className="align-items-center mb-3">
-        <Col className="d-flex align-items-center">
-          <h3 className="mb-0">
-            <i className="bi-bag-heart-fill me-2"></i> Productos
+      {/* Cabecera optimizada con Flexbox */}
+      <div className="d-flex align-items-center justify-content-between mb-3 mt-2">
+        <div className="d-flex align-items-center">
+          <h3 className="mb-0 fw-bold">
+            <i className="bi-bag-heart-fill me-2 text-primary"></i>
+            Gestión de Productos
           </h3>
-        </Col>
-        <Col xs={3} sm={5} md={5} lg={5} className="text-end">
-          <Button onClick={() => setMostrarModal(true)} size="md">
+        </div>
+
+        <div className="ms-2">
+          <Button
+            onClick={() => setMostrarModal(true)}
+            className="d-flex align-items-center justify-content-center shadow-sm px-3"
+            style={{
+              height: '42px',
+              borderRadius: '10px',
+              minWidth: '45px' // Mantiene la forma en móvil cuando no hay texto
+            }}
+          >
             <i className="bi-plus-lg"></i>
-            <span className="d-none d-sm-inline ms-2">Nuevo Producto</span>
+            {/* Texto responsivo: aparece desde 'sm' para que el botón se estire en PC */}
+            <span className="d-none d-sm-inline ms-2 fw-semibold" style={{ whiteSpace: 'nowrap' }}>
+              Nuevo Producto
+            </span>
           </Button>
-        </Col>
-      </Row>
+        </div>
+      </div>
 
       <hr />
 

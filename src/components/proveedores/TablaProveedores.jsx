@@ -10,118 +10,123 @@ const TablaProveedores = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (proveedores && proveedores.length > 0) {
+    if (proveedores) {
       setLoading(false);
     } else {
       setLoading(true);
     }
   }, [proveedores]);
 
+  // Estilos modernos, centrados y unificados con los demás módulos
   const estilos = {
     tablaContainer: {
       backgroundColor: "#ffffff",
-      borderRadius: "15px",
+      borderRadius: "16px",
       overflow: "hidden",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+      border: "1px solid #f0f0f0",
+      marginTop: "20px"
     },
     header: {
       backgroundColor: "#f8fafc",
       color: "#64748b",
-      textTransform: "uppercase",
       fontSize: "0.85rem",
-      letterSpacing: "0.5px",
       fontWeight: "700",
-      borderBottom: "2px solid #edf2f7",
+      letterSpacing: "0.05em"
     },
     fila: {
-      verticalAlign: "middle",
-      fontSize: "0.95rem",
-      color: "#334155",
       borderBottom: "1px solid #f1f5f9",
     },
     btnEdit: {
-      width: "35px",
-      height: "35px",
+      width: "38px",
+      height: "38px",
       borderRadius: "10px",
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
-      border: "none",
+      border: "1px solid #fef3c7",
       color: "#f59e0b",
       backgroundColor: "#fffbeb",
-      transition: "all 0.2s",
     },
     btnDelete: {
-      width: "35px",
-      height: "35px",
+      width: "38px",
+      height: "38px",
       borderRadius: "10px",
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
-      border: "none",
+      border: "1px solid #fee2e2",
       color: "#ef4444",
       backgroundColor: "#fef2f2",
-      transition: "all 0.2s",
     }
   };
 
   return (
     <>
       {loading ? (
-        <div className="text-center my-5">
-          <h4 className="text-muted fw-normal mb-3">Cargando proveedores...</h4>
+        <div className="text-center my-5 py-5">
           <Spinner animation="border" variant="primary" role="status" />
+          <h4 className="text-muted mt-3 fw-semibold">Cargando proveedores...</h4>
+        </div>
+      ) : proveedores.length === 0 ? (
+        <div className="text-center my-5 py-5 text-muted">
+          <i className="bi bi-person-lines-fill fs-1 d-block mb-2"></i>
+          <h4 className="fw-semibold">No hay proveedores registrados.</h4>
         </div>
       ) : (
-        <div style={estilos.tablaContainer} className="table-responsive">
-          <Table borderless hover className="mb-0">
-            <thead style={estilos.header}>
-              <tr>
-                <th className="ps-4 py-3">ID</th>
-                <th className="py-3">Nombre</th>
-                <th className="py-3 d-none d-md-table-cell">Teléfono</th>
-                <th className="py-3 d-none d-lg-table-cell">Dirección</th>
-                <th className="py-3 text-center pe-4">Acciones</th>
+        <div style={estilos.tablaContainer}>
+          <Table borderless hover responsive className="align-middle mb-0 text-center" style={{ tableLayout: 'fixed', width: '100%' }}>
+            <thead style={estilos.header} className="bg-light border-bottom">
+              <tr className="text-secondary text-uppercase">
+                <th className="py-4" style={{ width: "15%" }}>ID</th>
+                <th className="py-4" style={{ width: "30%" }}>Nombre</th>
+                <th className="py-4 d-none d-md-table-cell" style={{ width: "20%" }}>Teléfono</th>
+                <th className="py-4 d-none d-lg-table-cell" style={{ width: "20%" }}>Dirección</th>
+                <th className="py-4" style={{ width: "15%" }}>Acciones</th>
               </tr>
             </thead>
 
-            <tbody>
+            <tbody style={{ fontSize: '1rem' }}>
               {proveedores.map((proveedor) => (
                 <tr key={proveedor.id} style={estilos.fila}>
-                  <td className="ps-4 fw-bold text-muted">#{proveedor.id}</td>
+                  <td className="py-3 fw-bold text-primary" style={{ fontSize: '1.1rem' }}>
+                    #{proveedor.id}
+                  </td>
 
-                  <td className="fw-semibold">{proveedor.nombre}</td>
+                  <td className="py-3 fw-bold text-dark">{proveedor.nombre}</td>
 
-                  <td className="d-none d-md-table-cell">
+                  <td className="py-3 d-none d-md-table-cell">
                     <span className="text-muted">
                       <i className="bi bi-telephone me-2"></i>
                       {proveedor.telefono || "N/A"}
                     </span>
                   </td>
 
-                  <td className="d-none d-lg-table-cell text-truncate" style={{ maxWidth: "250px" }}>
+                  <td className="py-3 d-none d-lg-table-cell text-truncate" style={{ maxWidth: "250px" }}>
                     <span className="text-muted">
                       <i className="bi bi-geo-alt me-2"></i>
                       {proveedor.direccion || "N/A"}
                     </span>
                   </td>
 
-                  <td className="text-center pe-4">
+                  <td className="py-3">
                     <div className="d-flex justify-content-center gap-2">
                       <Button
                         style={estilos.btnEdit}
+                        className="shadow-sm"
                         onClick={() => abrirModalEdicion(proveedor)}
                         title="Editar proveedor"
                       >
-                        <i className="bi bi-pencil-square"></i>
+                        <i className="bi bi-pencil-square fs-6"></i>
                       </Button>
 
                       <Button
                         style={estilos.btnDelete}
+                        className="shadow-sm"
                         onClick={() => abrirModalEliminacion(proveedor)}
                         title="Eliminar proveedor"
                       >
-                        <i className="bi bi-trash3-fill"></i>
+                        <i className="bi bi-trash3-fill fs-6"></i>
                       </Button>
                     </div>
                   </td>

@@ -2,26 +2,26 @@ import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Spinner, Alert } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
 
-// Importación de componentes
-import ModalRegistroCategoria from "../components/categorias/ModalRegistroCategoria";
-import ModalEdicionCategoria from "../components/categorias/ModalEdicionCategoria";
-import ModalEliminacionCategoria from "../components/categorias/ModalEliminacionCategoria";
-import TablaCategorias from "../components/categorias/TablaCategorias";
-import TarjetaCategoria from "../components/categorias/TarjetaCategoria";
+// Importación de componentes locales
+import ModalRegistroClientes from "../components/clientes/ModalRegistroClientes";
+import ModalEdicionCliente from "../components/clientes/ModalEdicionCliente";
+import ModalEliminacionCliente from "../components/clientes/ModalEliminacionCliente";
+import TablaClientes from "../components/clientes/TablaClientes";
+import TarjetaClientes from "../components/clientes/TarjetaClientes";
 import NotificacionOperacion from "../components/NotificacionOperacion";
 
-// NUEVOS COMPONENTES DE LÓGICA
+// NUEVOS COMPONENTES DE LÓGICA COMPARTIDA
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import Paginacion from "../components/ordenamiento/Paginacion";
 
-const Categorias = () => {
+const Clientes = () => {
   // --- ESTADOS PRINCIPALES ---
-  const [categorias, setCategorias] = useState([]);
+  const [clientes, setClientes] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [toast, setToast] = useState({ mostrar: false, mensaje: "", tipo: "" });
 
   // --- NUEVOS ESTADOS: BÚSQUEDA Y PAGINACIÓN ---
-  const [categoriasFiltradas, setCategoriasFiltradas] = useState([]);
+  const [clientesFiltrados, setClientesFiltrados] = useState([]);
   const [textoBusqueda, setTextoBusqueda] = useState("");
   const [registrosPorPagina, establecerRegistrosPorPagina] = useState(5);
   const [paginaActual, establecerPaginaActual] = useState(1);
@@ -31,39 +31,41 @@ const Categorias = () => {
   const [mostrarModalEdicion, setMostrarModalEdicion] = useState(false);
   const [mostrarModalEliminacion, setMostrarModalEliminacion] = useState(false);
 
-  const [nuevaCategoria, setNuevaCategoria] = useState({
-    nombre_categoria: "",
-    descripcion_categoria: "",
+  const [nuevoCliente, setNuevoCliente] = useState({
+    nombre: "",
+    apellido: "",
+    telefono: "",
   });
 
-  const [categoriaEditar, setCategoriaEditar] = useState({
+  const [clienteEditar, setClienteEditar] = useState({
     id: "",
-    nombre_categoria: "",
-    descripcion_categoria: "",
+    nombre: "",
+    apellido: "",
+    telefono: "",
   });
 
-  const [categoriaAEliminar, setCategoriaAEliminar] = useState(null);
+  const [clienteAEliminar, setClienteAEliminar] = useState(null);
 
   // --- CARGA DE DATOS ---
   useEffect(() => {
-    cargarCategorias();
+    cargarClientes();
   }, []);
 
-  const cargarCategorias = async () => {
+  const cargarClientes = async () => {
     try {
       setCargando(true);
       const { data, error } = await supabase
-        .from("categorias")
+        .from("clientes")
         .select("*")
-        .order("id", { ascending: false }); // <-- Trae los últimos registros de primero nativamente
+        .order("id", { ascending: false }); // <-- Últimos registros cargados arriba primero de forma nativa
 
       if (error) throw error;
-      setCategorias(data || []);
+      setClientes(data || []);
     } catch (error) {
-      console.error("Error al cargar categorías:", error.message);
+      console.error("Error al cargar clientes:", error.message);
       setToast({
         mostrar: true,
-        mensaje: "Error al cargar las categorías.",
+        mensaje: "Error al cargar los clientes.",
         tipo: "error",
       });
     } finally {
@@ -74,21 +76,22 @@ const Categorias = () => {
   // --- LÓGICA: FILTRADO ---
   useEffect(() => {
     if (!textoBusqueda.trim()) {
-      setCategoriasFiltradas(categorias);
+      setClientesFiltrados(clientes);
     } else {
       const term = textoBusqueda.toLowerCase().trim();
-      const filtradas = categorias.filter(
-        (cat) =>
-          cat.nombre_categoria.toLowerCase().includes(term) ||
-          (cat.descripcion_categoria && cat.descripcion_categoria.toLowerCase().includes(term))
+      const filtrados = clientes.filter(
+        (cli) =>
+          cli.nombre.toLowerCase().includes(term) ||
+          cli.apellido.toLowerCase().includes(term) ||
+          (cli.telefono && cli.telefono.toLowerCase().includes(term))
       );
-      setCategoriasFiltradas(filtradas);
+      setClientesFiltrados(filtrados);
     }
     establecerPaginaActual(1);
-  }, [textoBusqueda, categorias]);
+  }, [textoBusqueda, clientes]);
 
   // --- LÓGICA: PAGINACIÓN ---
-  const categoriasPaginadas = categoriasFiltradas.slice(
+  const clientesPaginados = clientesFiltrados.slice(
     (paginaActual - 1) * registrosPorPagina,
     paginaActual * registrosPorPagina
   );
@@ -98,84 +101,96 @@ const Categorias = () => {
   };
 
   // --- ABRIR MODALES ---
-  const abrirModalEdicion = (categoria) => {
-    setCategoriaEditar({
-      id: categoria.id,
-      nombre_categoria: categoria.nombre_categoria,
-      descripcion_categoria: categoria.descripcion_categoria || "",
+  const abrirModalEdicion = (cliente) => {
+    setClienteEditar({
+      id: cliente.id,
+      nombre: cliente.nombre,
+      apellido: cliente.apellido,
+      telefono: cliente.telefono || "",
     });
     setMostrarModalEdicion(true);
   };
 
-  const abrirModalEliminacion = (categoria) => {
-    setCategoriaAEliminar(categoria);
+  const abrirModalEliminacion = (cliente) => {
+    setClienteAEliminar(cliente);
     setMostrarModalEliminacion(true);
   };
 
   // --- MANEJO DE INPUTS ---
   const manejoCambioInput = (e) => {
     const { name, value } = e.target;
-    setNuevaCategoria((prev) => ({ ...prev, [name]: value }));
+    setNuevoCliente((prev) => ({ ...prev, [name]: value }));
   };
 
   const manejoCambioInputEdicion = (e) => {
     const { name, value } = e.target;
-    setCategoriaEditar((prev) => ({ ...prev, [name]: value }));
+    setClienteEditar((prev) => ({ ...prev, [name]: value }));
   };
 
-  // --- CRUD ---
-  const agregarCategoria = async () => {
-    if (!nuevaCategoria.nombre_categoria.trim()) {
-      setToast({ mostrar: true, mensaje: "El nombre es obligatorio.", tipo: "advertencia" });
+  // --- CRUD LÓGICA ---
+  const agregarCliente = async () => {
+    if (!nuevoCliente.nombre.trim() || !nuevoCliente.apellido.trim()) {
+      setToast({ mostrar: true, mensaje: "Nombre y apellido obligatorios.", tipo: "advertencia" });
       return;
     }
     try {
-      const { error } = await supabase.from("categorias").insert([nuevaCategoria]);
-      if (error) throw error;
-      setToast({ mostrar: true, mensaje: `Categoría registrada con éxito.`, tipo: "exito" });
-      setNuevaCategoria({ nombre_categoria: "", descripcion_categoria: "" });
+      const { error } = await supabase.from("clientes").insert([nuevoCliente]);
+      
+      if (error) {
+        if (error.code === "23505") { // Captura llave duplicada (ej. si controlas teléfonos únicos o cédulas en DB)
+          setToast({ mostrar: true, mensaje: "Este cliente ya se encuentra registrado.", tipo: "advertencia" });
+          return;
+        }
+        throw error;
+      }
+
+      setToast({ mostrar: true, mensaje: `Cliente registrado con éxito.`, tipo: "exito" });
+      setNuevoCliente({ nombre: "", apellido: "", telefono: "" });
       setMostrarModalRegistro(false);
-      await cargarCategorias();
+      await cargarClientes();
     } catch (error) {
-      setToast({ mostrar: true, mensaje: "Error al registrar.", tipo: "error" });
+      setToast({ mostrar: true, mensaje: "Error al registrar cliente.", tipo: "error" });
     }
   };
 
-  const actualizarCategoria = async () => {
-    if (!categoriaEditar.nombre_categoria.trim()) {
-      setToast({ mostrar: true, mensaje: "El nombre es obligatorio.", tipo: "advertencia" });
+  const actualizarCliente = async () => {
+    if (!clienteEditar.nombre.trim() || !clienteEditar.apellido.trim()) {
+      setToast({ mostrar: true, mensaje: "Nombre y apellido obligatorios.", tipo: "advertencia" });
       return;
     }
     try {
       const { error } = await supabase
-        .from("categorias")
+        .from("clientes")
         .update({
-          nombre_categoria: categoriaEditar.nombre_categoria,
-          descripcion_categoria: categoriaEditar.descripcion_categoria,
+          nombre: clienteEditar.nombre,
+          apellido: clienteEditar.apellido,
+          telefono: clienteEditar.telefono,
         })
-        .eq("id", categoriaEditar.id);
+        .eq("id", clienteEditar.id);
+
       if (error) throw error;
-      setToast({ mostrar: true, mensaje: `Categoría actualizada correctamente.`, tipo: "exito" });
+      setToast({ mostrar: true, mensaje: `Cliente actualizado correctamente.`, tipo: "exito" });
       setMostrarModalEdicion(false);
-      await cargarCategorias();
+      await cargarClientes();
     } catch (error) {
       setToast({ mostrar: true, mensaje: "Error al actualizar.", tipo: "error" });
     }
   };
 
-  const eliminarCategoria = async () => {
-    if (!categoriaAEliminar) return;
+  const eliminarCliente = async () => {
+    if (!clienteAEliminar) return;
     try {
       const { error } = await supabase
-        .from("categorias")
+        .from("clientes")
         .delete()
-        .eq("id", categoriaAEliminar.id);
+        .eq("id", clienteAEliminar.id);
+
       if (error) throw error;
-      setToast({ mostrar: true, mensaje: `Categoría eliminada.`, tipo: "exito" });
+      setToast({ mostrar: true, mensaje: `Cliente eliminado del sistema.`, tipo: "exito" });
       setMostrarModalEliminacion(false);
-      await cargarCategorias();
+      await cargarClientes();
     } catch (error) {
-      setToast({ mostrar: true, mensaje: "Error al eliminar.", tipo: "error" });
+      setToast({ mostrar: true, mensaje: "Error al eliminar el cliente.", tipo: "error" });
     }
   };
 
@@ -183,10 +198,10 @@ const Categorias = () => {
     <Container className="mt-4">
       {/* Cabecera */}
       <div className="d-flex align-items-center justify-content-between mb-4 mt-2">
-        <div className="d-flex align-items-center">
+        <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
           <h3 className="mb-0 fw-bold">
-            <i className="bi bi-tags-fill me-2 text-primary"></i>
-            Gestión de Categorías
+            <i className="bi bi-person-badge-fill me-2 text-primary"></i>
+            <span className="text-truncate">Gestión de Clientes</span>
           </h3>
         </div>
 
@@ -202,7 +217,7 @@ const Categorias = () => {
           >
             <i className="bi bi-plus-lg"></i>
             <span className="d-none d-sm-inline ms-2 fw-semibold" style={{ whiteSpace: 'nowrap' }}>
-              Nueva categoría
+              Nuevo Cliente
             </span>
           </Button>
         </div>
@@ -216,16 +231,16 @@ const Categorias = () => {
           <CuadroBusquedas
             textoBusqueda={textoBusqueda}
             manejarCambioBusqueda={manejarBusqueda}
-            placeholder="Buscar por nombre o descripción..."
+            placeholder="Buscar por nombre, apellido o teléfono..."
           />
         </Col>
       </Row>
 
       {/* MENSAJE SI NO HAY COINCIDENCIAS */}
-      {!cargando && textoBusqueda.trim() && categoriasFiltradas.length === 0 && (
+      {!cargando && textoBusqueda.trim() && clientesFiltrados.length === 0 && (
         <Alert variant="info" className="text-center">
           <i className="bi bi-info-circle me-2"></i>
-          No se encontraron categorías que coincidan con "{textoBusqueda}".
+          No se encontraron clientes que coincidan con "{textoBusqueda}".
         </Alert>
       )}
 
@@ -233,25 +248,25 @@ const Categorias = () => {
       {cargando ? (
         <div className="text-center my-5 py-5">
           <Spinner animation="border" variant="primary" />
-          <p className="mt-3 text-muted fw-bold">Cargando categorías...</p>
+          <p className="mt-3 text-muted fw-bold">Cargando clientes...</p>
         </div>
       ) : (
         <>
-          {categoriasFiltradas.length > 0 && (
+          {clientesFiltrados.length > 0 && (
             <>
-              {/* Vista en tarjetas (móviles) */}
+              {/* Tarjetas en móvil */}
               <div className="d-lg-none">
-                <TarjetaCategoria
-                  categorias={categoriasPaginadas}
+                <TarjetaClientes
+                  clientes={clientesPaginados}
                   abrirModalEdicion={abrirModalEdicion}
                   abrirModalEliminacion={abrirModalEliminacion}
                 />
               </div>
 
-              {/* Vista en tabla (escritorio) */}
+              {/* Tabla en pantallas grandes */}
               <div className="d-none d-lg-block">
-                <TablaCategorias
-                  categorias={categoriasPaginadas}
+                <TablaClientes
+                  clientes={clientesPaginados}
                   abrirModalEdicion={abrirModalEdicion}
                   abrirModalEliminacion={abrirModalEliminacion}
                 />
@@ -260,7 +275,7 @@ const Categorias = () => {
               {/* COMPONENTE DE PAGINACIÓN */}
               <Paginacion
                 registrosPorPagina={registrosPorPagina}
-                totalRegistros={categoriasFiltradas.length}
+                totalRegistros={clientesFiltrados.length}
                 paginaActual={paginaActual}
                 establecerPaginaActual={establecerPaginaActual}
                 establecerRegistrosPorPagina={establecerRegistrosPorPagina}
@@ -270,38 +285,43 @@ const Categorias = () => {
         </>
       )}
 
-      {/* Modales */}
-      <ModalRegistroCategoria
+      {/* Modales Inyectados */}
+      <ModalRegistroClientes
         mostrarModal={mostrarModalRegistro}
         setMostrarModal={setMostrarModalRegistro}
-        nuevaCategoria={nuevaCategoria}
+        nuevoCliente={nuevoCliente}
         manejoCambioInput={manejoCambioInput}
-        agregarCategoria={agregarCategoria}
+        agregarCliente={agregarCliente}
       />
 
-      <ModalEdicionCategoria
+      <ModalEdicionCliente
         mostrarModalEdicion={mostrarModalEdicion}
         setMostrarModalEdicion={setMostrarModalEdicion}
-        categoriaEditar={categoriaEditar}
+        clienteEditar={clienteEditar}
         manejoCambioInputEdicion={manejoCambioInputEdicion}
-        actualizarCategoria={actualizarCategoria}
+        actualizarCliente={actualizarCliente}
       />
 
-      <ModalEliminacionCategoria
+      <ModalEliminacionCliente
         mostrarModalEliminacion={mostrarModalEliminacion}
         setMostrarModalEliminacion={setMostrarModalEliminacion}
-        eliminarCategoria={eliminarCategoria}
-        categoria={categoriaAEliminar}
+        eliminarCliente={eliminarCliente}
+        cliente={clienteAEliminar}
       />
 
       <NotificacionOperacion
         mostrar={toast.mostrar}
         mensaje={toast.mensaje}
         tipo={toast.tipo}
-        onCerrar={() => setToast({ ...toast, mostrar: false })}
+        onCerrar={() =>
+          setToast((prev) => ({
+            ...prev,
+            mostrar: false,
+          }))
+        }
       />
     </Container>
   );
 };
 
-export default Categorias;
+export default Clientes;
