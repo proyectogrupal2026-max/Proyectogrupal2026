@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Container, Table, Button, Card, Badge, Pagination, Row, Col } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
-import ModalRegistrarCompra from "../components/compras/modalRegistrarCompra";
-import ModalDetalleCompra from "../components/compras/modalDetalleCompra";
+import ModalRegistrarCompra from "../components/compras/ModalRegistrarCompra";
+import ModalDetalleCompra from "../components/compras/ModalDetalleCompra";
 
 // IMPORTAMOS TU COMPONENTE PERSONALIZADO DE BÚSQUEDA
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
