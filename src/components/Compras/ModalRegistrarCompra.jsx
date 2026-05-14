@@ -172,7 +172,7 @@ const ModalRegistrarCompra = ({ show, onHide, recargar }) => {
           <div className="bg-primary-subtle rounded-3 p-2 me-3 text-primary d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
             <i className="bi bi-cart-check fs-4"></i>
           </div>
-          Nueva Entrada de Mercancía
+          Nueva Mercancía
         </Modal.Title>
       </Modal.Header>
       
