@@ -1,64 +1,59 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import FormularioLogin from "../components/login/FormularioLogin";   
-import { supabase } from "../database/supabaseconfig";       
+import { useAuth } from "../components/context/AuthContext";
+import FormularioLogin from "../components/login/FormularioLogin";
 
 const Login = () => {
-  const [usuario, setUsuario] = useState("");
-  const [contraseña, setContraseña] = useState("");
-  const [error, setError] = useState("");
-  const navegar = useNavigate();
+  const [usuarioInput, setUsuarioInput] = useState("");
+  const [contrasenaInput, setContrasenaInput] = useState("");
+  const [errorLocal, setErrorLocal] = useState("");
+  const [autenticando, setAutenticando] = useState(false);
 
-  const iniciarSesion = async () => {
-    setError("");
-    try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: usuario,
-        password: contraseña,
-      });
+  const navigate = useNavigate();
+  const { login, usuario, cargando } = useAuth();
 
-      if (authError) {
-        setError("Usuario o contraseña incorrectos");
-        return;
-      }
-
-      if (data.user) {
-        localStorage.setItem("usuario-supabase", usuario);
-        navegar("/");   
-      }
-    } catch (err) {
-      setError("Error al conectar con el servidor");
-    }
-  };
-
+  // Redirección inmediata si el usuario ya inició sesión
   useEffect(() => {
-    if (localStorage.getItem("usuario-supabase")) {
-      navegar("/");
+    if (!cargando && usuario) {
+      navigate("/", { replace: true });
     }
-  }, [navegar]);
+  }, [usuario, cargando, navigate]);
 
-  const estiloContenedor = {
-    position: "fixed",
-    top: "0",
-    left: "0",
-    width: "100%",
-    height: "100%",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "linear-gradient(135deg, #FFDEA9, #B5FFFC)", 
-    padding: "20px",
+  const iniciarSesion = async (e) => {
+    if (e) e.preventDefault();
+    setErrorLocal("");
+
+    if (!usuarioInput.trim() || !contrasenaInput.trim()) {
+      setErrorLocal("Por favor, complete todos los campos.");
+      return;
+    }
+
+    try {
+      setAutenticando(true);
+      await login(usuarioInput.trim(), contrasenaInput);
+    } catch (err) {
+      console.error("Error al autenticar:", err);
+      setErrorLocal(err.message || "Credenciales incorrectas. Intente de nuevo.");
+      setAutenticando(false);
+    }
   };
+
+  // CORRECCIÓN: Si el usuario existe, dejamos que el useEffect maneje la redirección.
+  // Si no hay usuario, renderizamos el formulario de inmediato evitando la pantalla en blanco.
+  if (cargando && usuario) {
+    return null;
+  }
 
   return (
-    <div style={estiloContenedor}>
+    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "80vh" }}>
       <FormularioLogin
-        usuario={usuario}
-        contraseña={contraseña}
-        error={error}
-        setUsuario={setUsuario}
-        setContraseña={setContraseña}
-        iniciarSesión={iniciarSesion}
+        usuario={usuarioInput}
+        contrasena={contrasenaInput}
+        error={errorLocal}
+        setUsuario={setUsuarioInput}
+        setContrasena={setContrasenaInput}
+        iniciarSesion={iniciarSesion}
+        cargando={autenticando}
       />
     </div>
   );
