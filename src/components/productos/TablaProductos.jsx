@@ -5,7 +5,8 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 const TablaProductos = ({
   productos,
   abrirModalEdicion,
-  abrirModalEliminacion
+  abrirModalEliminacion,
+  generarPDFProducto
 }) => {
   const [loading, setLoading] = useState(true);
 
@@ -58,26 +59,20 @@ const TablaProductos = ({
           <Spinner animation="border" variant="primary" />
           <h4 className="text-muted mt-3 fw-semibold">Cargando productos...</h4>
         </div>
-      ) : productos.length === 0 ? (
-        <div className="text-center my-5 py-5 text-muted">
-          <i className="bi bi-box-seam fs-1 d-block mb-2"></i>
-          <h4 className="fw-semibold">No hay productos registrados.</h4>
-        </div>
       ) : (
         <Table borderless hover responsive className="align-middle mb-0 text-center" style={{ tableLayout: 'fixed', width: '100%' }}>
           <thead style={estilos.header} className="bg-light border-bottom">
             <tr className="text-secondary text-uppercase">
               <th className="py-4" style={{ width: "12%" }}>Imagen</th>
-              <th className="py-4" style={{ width: "28%" }}>Nombre</th>
-              <th className="py-4 d-none d-md-table-cell" style={{ width: "18%" }}>Categoría</th>
-              <th className="py-4" style={{ width: "12%" }}>Stock</th>
-              <th className="py-4" style={{ width: "15%" }}>P. Venta</th>
-              <th className="py-4 d-none d-lg-table-cell" style={{ width: "15%" }}>P. Compra</th>
-              <th className="py-4" style={{ width: "15%" }}>Acciones</th>
+              <th className="py-4" style={{ width: "26%" }}>Nombre</th>
+              <th className="py-4 d-none d-md-table-cell" style={{ width: "16%" }}>Categoría</th>
+              <th className="py-4" style={{ width: "10%" }}>Stock</th>
+              <th className="py-4" style={{ width: "14%" }}>P. Venta</th>
+              <th className="py-4 d-none d-lg-table-cell" style={{ width: "14%" }}>P. Compra</th>
+              <th className="py-4" style={{ width: "20%" }}>Acciones</th>
             </tr>
           </thead>
           <tbody style={{ fontSize: '1rem' }}>
-            {/* Renderiza los productos respetando el orden descendente configurado en el backend */}
             {productos.map((producto) => (
               <tr key={producto.id} style={estilos.row}>
                 <td className="py-3">
@@ -88,9 +83,9 @@ const TablaProductos = ({
                     className="shadow-sm"
                   />
                 </td>
-                <td className="py-3 fw-bold text-dark text-start text-md-center">{producto.nombre}</td>
-                <td className="py-3 text-muted d-none d-md-table-cell">
-                  {producto.categorias?.nombre_categoria || producto.categoria_producto}
+                <td className="py-3 fw-bold text-dark text-start text-md-center text-truncate">{producto.nombre}</td>
+                <td className="py-3 text-muted d-none d-md-table-cell text-truncate">
+                  {producto.categorias?.nombre_categoria || "Sin categoría"}
                 </td>
                 <td className="py-3 fw-semibold text-dark">{producto.stock}</td>
                 <td className="py-3 fw-bold text-primary">
@@ -105,6 +100,7 @@ const TablaProductos = ({
                       style={{ backgroundColor: "#fffbeb", color: "#f59e0b", border: "1px solid #fef3c7", ...estilos.btnAccion }}
                       className="shadow-sm"
                       onClick={() => abrirModalEdicion(producto)}
+                      title="Editar"
                     >
                       <i className="bi bi-pencil fs-6"></i>
                     </Button>
@@ -113,8 +109,18 @@ const TablaProductos = ({
                       style={{ backgroundColor: "#fef2f2", color: "#ef4444", border: "1px solid #fee2e2", ...estilos.btnAccion }}
                       className="shadow-sm"
                       onClick={() => abrirModalEliminacion(producto)}
+                      title="Eliminar"
                     >
                       <i className="bi bi-trash fs-6"></i>
+                    </Button>
+
+                    <Button
+                      style={{ backgroundColor: "#fdf2f2", color: "#dc3545", border: "1px solid #fcdede", ...estilos.btnAccion }}
+                      className="shadow-sm"
+                      onClick={() => generarPDFProducto(producto)}
+                      title="Exportar PDF de Producto"
+                    >
+                      <i className="bi bi-file-earmark-pdf-fill fs-6"></i>
                     </Button>
                   </div>
                 </td>

@@ -8,5 +8,9 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173
+  },
+  optimizeDeps: {
+    // Dejamos solo las librerías principales instaladas en tu package.json
+    include: ['recharts', 'xlsx']
   }
 })

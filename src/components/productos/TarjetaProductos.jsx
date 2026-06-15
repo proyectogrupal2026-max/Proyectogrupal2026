@@ -5,7 +5,8 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 const TarjetaProducto = ({
   productos,
   abrirModalEdicion,
-  abrirModalEliminacion
+  abrirModalEliminacion,
+  generarPDFProducto
 }) => {
   const [cargando, setCargando] = useState(true);
   const [idTarjetaActiva, setIdTarjetaActiva] = useState(null);
@@ -69,9 +70,9 @@ const TarjetaProducto = ({
       boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
     },
     precioTag: {
-      fontSize: "1.1rem",
+      fontSize: "1.05rem",
       fontWeight: "800",
-      color: "#3b82f6"
+      color: "#0d6efd"
     }
   };
 
@@ -142,7 +143,7 @@ const TarjetaProducto = ({
 
                     <Col xs={4} className="d-flex flex-column align-items-end justify-content-center text-end pe-3">
                       <div style={estilos.precioTag}>
-                        ${parseFloat(producto.precio_venta).toFixed(2)}
+                        C$ {parseFloat(producto.precio_venta || 0).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     </Col>
                   </Row>
@@ -170,6 +171,7 @@ const TarjetaProducto = ({
                           setIdTarjetaActiva(null);
                         }}
                         aria-label={`Editar ${producto.nombre}`}
+                        title="Editar"
                       >
                         <i className="bi bi-pencil-fill"></i>
                       </Button>
@@ -182,8 +184,22 @@ const TarjetaProducto = ({
                           setIdTarjetaActiva(null);
                         }}
                         aria-label={`Eliminar ${producto.nombre}`}
+                        title="Eliminar"
                       >
                         <i className="bi bi-trash3-fill"></i>
+                      </Button>
+
+                      <Button
+                        variant="danger"
+                        style={{ ...estilos.btnRound, backgroundColor: "#fdf2f2", color: "#dc3545", border: "1px solid #fcdede" }}
+                        onClick={() => {
+                          generarPDFProducto(producto);
+                          setIdTarjetaActiva(null);
+                        }}
+                        aria-label={`Exportar PDF de ${producto.nombre}`}
+                        title="Exportar PDF de Producto"
+                      >
+                        <i className="bi bi-file-earmark-pdf-fill"></i>
                       </Button>
                     </div>
                   </div>

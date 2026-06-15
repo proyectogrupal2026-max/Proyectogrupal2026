@@ -6,6 +6,7 @@ const TarjetaClientes = ({
   clientes,
   abrirModalEdicion,
   abrirModalEliminacion,
+  generarPDFCliente // <--- Añadida la prop aquí también para soporte móvil
 }) => {
   const [cargando, setCargando] = useState(true);
   const [idTarjetaActiva, setIdTarjetaActiva] = useState(null);
@@ -23,7 +24,7 @@ const TarjetaClientes = ({
     return () => window.removeEventListener("keydown", manejarTeclaEscape);
   }, [manejarTeclaEscape]);
 
-  const alternarTarjetaActiva = (id) => {
+  const stylesOverlayToggle = (id) => {
     setIdTarjetaActiva((anterior) => (anterior === id ? null : id));
   };
 
@@ -48,7 +49,7 @@ const TarjetaClientes = ({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: "rgba(255, 255, 255, 0.85)",
+      backgroundColor: "rgba(255, 255, 255, 0.92)", // Ligeramente más opaco para mejor contraste de 3 botones
       backdropFilter: "blur(4px)",
       display: "flex",
       alignItems: "center",
@@ -56,8 +57,8 @@ const TarjetaClientes = ({
       zIndex: 10,
     },
     btnEdit: {
-      width: "50px",
-      height: "50px",
+      width: "46px",
+      height: "46px",
       borderRadius: "12px",
       display: "flex",
       alignItems: "center",
@@ -68,8 +69,8 @@ const TarjetaClientes = ({
       fontSize: "1.2rem"
     },
     btnDelete: {
-      width: "50px",
-      height: "50px",
+      width: "46px",
+      height: "46px",
       borderRadius: "12px",
       display: "flex",
       alignItems: "center",
@@ -77,6 +78,18 @@ const TarjetaClientes = ({
       border: "none",
       color: "#ef4444",
       backgroundColor: "#fef2f2",
+      fontSize: "1.2rem"
+    },
+    btnPdf: {
+      width: "46px",
+      height: "46px",
+      borderRadius: "12px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      border: "none",
+      color: "#dc3545",
+      backgroundColor: "#fdf2f2",
       fontSize: "1.2rem"
     }
   };
@@ -104,7 +117,7 @@ const TarjetaClientes = ({
                     : "0 4px 6px -1px rgba(0, 0, 0, 0.05)"
                 }}
                 className="mb-3 rounded-4 w-100"
-                onClick={() => alternarTarjetaActiva(cliente.id)}
+                onClick={() => stylesOverlayToggle(cliente.id)}
               >
                 <Card.Body className="p-3">
                   <Row className="align-items-center gx-3">
@@ -134,9 +147,11 @@ const TarjetaClientes = ({
                       setIdTarjetaActiva(null);
                     }}
                   >
-                    <div className="d-flex gap-3" onClick={(e) => e.stopPropagation()}>
+                    <div className="d-flex gap-2" onClick={(e) => e.stopPropagation()}>
+                      {/* Botón de Edición */}
                       <Button
                         style={estilos.btnEdit}
+                        className="shadow-sm"
                         onClick={() => {
                           abrirModalEdicion(cliente);
                           setIdTarjetaActiva(null);
@@ -145,14 +160,29 @@ const TarjetaClientes = ({
                         <i className="bi bi-pencil-square"></i>
                       </Button>
 
+                      {/* Botón de Eliminación */}
                       <Button
                         style={estilos.btnDelete}
+                        className="shadow-sm"
                         onClick={() => {
                           abrirModalEliminacion(cliente);
                           setIdTarjetaActiva(null);
                         }}
                       >
                         <i className="bi bi-trash3-fill"></i>
+                      </Button>
+
+                      {/* Botón de PDF en Móvil */}
+                      <Button
+                        style={estilos.btnPdf}
+                        className="shadow-sm"
+                        onClick={() => {
+                          generarPDFCliente(cliente);
+                          setIdTarjetaActiva(null);
+                        }}
+                        title="Reporte PDF"
+                      >
+                        <i className="bi bi-file-earmark-pdf-fill"></i>
                       </Button>
                     </div>
                   </div>

@@ -6,6 +6,7 @@ const TablaCategorias = ({
   categorias,
   abrirModalEdicion,
   abrirModalEliminacion,
+  generarPDFCategoria // <--- Recibimos la nueva función como prop
 }) => {
   const [loading, setLoading] = useState(true);
 
@@ -64,14 +65,13 @@ const TablaCategorias = ({
         <Table borderless hover responsive className="align-middle mb-0 text-center" style={{ tableLayout: 'fixed', width: '100%' }}>
           <thead style={estilos.encabezado} className="bg-light border-bottom">
             <tr className="text-secondary text-uppercase">
-              <th className="py-4" style={{ width: "15%" }}>ID</th>
-              <th className="py-4" style={{ width: "35%" }}>Nombre Categoría</th>
-              <th className="d-none d-md-table-cell py-4" style={{ width: "35%" }}>Descripción</th>
-              <th className="py-4" style={{ width: "15%" }}>Acciones</th>
+              <th className="py-4" style={{ width: "12%" }}>ID</th>
+              <th className="py-4" style={{ width: "38%" }}>Nombre Categoría</th>
+              <th className="d-none d-md-table-cell py-4" style={{ width: "32%" }}>Descripción</th>
+              <th className="py-4" style={{ width: "18%" }}>Acciones</th>
             </tr>
           </thead>
           <tbody style={{ fontSize: '1rem' }}>
-            {/* Renderiza el arreglo exactamente en el orden correcto que viene del padre */}
             {categorias.map((categoria) => (
               <tr key={categoria.id} style={estilos.fila}>
                 <td className="py-3 fw-bold text-primary" style={{ fontSize: '1.1rem' }}>
@@ -80,11 +80,12 @@ const TablaCategorias = ({
                 <td className="py-3 fw-bold text-dark">
                   {categoria.nombre_categoria}
                 </td>
-                <td className="d-none d-md-table-cell py-3 text-muted">
+                <td className="d-none d-md-table-cell py-3 text-muted text-truncate">
                   {categoria.descripcion_categoria || "Sin descripción"}
                 </td>
                 <td className="py-3">
                   <div style={estilos.celdaAcciones}>
+                    {/* Botón de Edición */}
                     <Button
                       variant="light"
                       style={{ 
@@ -100,6 +101,7 @@ const TablaCategorias = ({
                       <i className="bi bi-pencil-square fs-6"></i>
                     </Button>
 
+                    {/* Botón de Eliminación */}
                     <Button
                       variant="light"
                       style={{ 
@@ -113,6 +115,22 @@ const TablaCategorias = ({
                       title="Eliminar"
                     >
                       <i className="bi bi-trash3 fs-6"></i>
+                    </Button>
+
+                    {/* NUEVO BOTÓN: EXPORTAR REPORTE PDF */}
+                    <Button
+                      variant="light"
+                      style={{ 
+                        ...estilos.btnAccion, 
+                        color: "#dc3545", // Color rojo clásico de archivos PDF
+                        backgroundColor: "#fdf2f2",
+                        border: "1px solid #fcdede"
+                      }}
+                      className="shadow-sm"
+                      onClick={() => generarPDFCategoria(categoria)}
+                      title="Exportar Reporte PDF"
+                    >
+                      <i className="bi bi-file-earmark-pdf-fill fs-6"></i>
                     </Button>
                   </div>
                 </td>

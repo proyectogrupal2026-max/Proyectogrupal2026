@@ -6,6 +6,7 @@ const TarjetaProveedor = ({
   proveedores,
   abrirModalEdicion,
   abrirModalEliminacion,
+  generarPDFProveedor // <--- Recibimos la función de exportación
 }) => {
   const [cargando, setCargando] = useState(true);
   const [idTarjetaActiva, setIdTarjetaActiva] = useState(null);
@@ -52,36 +53,34 @@ const TarjetaProveedor = ({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: "rgba(255, 255, 255, 0.85)",
+      backgroundColor: "rgba(255, 255, 255, 0.9)",
       backdropFilter: "blur(4px)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       zIndex: 10,
     },
-    btnEdit: {
-      width: "50px",
-      height: "50px",
+    btnAccion: {
+      width: "46px",
+      height: "46px",
       borderRadius: "12px",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       border: "none",
+      fontSize: "1.1rem"
+    },
+    btnEdit: {
       color: "#f59e0b",
       backgroundColor: "#fffbeb",
-      fontSize: "1.2rem"
     },
     btnDelete: {
-      width: "50px",
-      height: "50px",
-      borderRadius: "12px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      border: "none",
       color: "#ef4444",
       backgroundColor: "#fef2f2",
-      fontSize: "1.2rem"
+    },
+    btnPDF: {
+      color: "#dc3545",
+      backgroundColor: "#fdf2f2",
     }
   };
 
@@ -103,8 +102,8 @@ const TarjetaProveedor = ({
                 style={{
                   ...estilos.card,
                   transform: tarjetaActiva ? "scale(0.98)" : "scale(1)",
-                  boxShadow: tarjetaActiva 
-                    ? "0 10px 15px -3px rgba(0, 0, 0, 0.1)" 
+                  boxShadow: tarjetaActiva
+                    ? "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
                     : "0 4px 6px -1px rgba(0, 0, 0, 0.05)"
                 }}
                 className="mb-3 rounded-4 w-100"
@@ -152,9 +151,10 @@ const TarjetaProveedor = ({
                       setIdTarjetaActiva(null);
                     }}
                   >
-                    <div className="d-flex gap-3" onClick={(e) => e.stopPropagation()}>
+                    <div className="d-flex gap-2" onClick={(e) => e.stopPropagation()}>
+                      {/* Editar */}
                       <Button
-                        style={estilos.btnEdit}
+                        style={{ ...estilos.btnAccion, ...estilos.btnEdit }}
                         onClick={() => {
                           abrirModalEdicion(proveedor);
                           setIdTarjetaActiva(null);
@@ -164,8 +164,9 @@ const TarjetaProveedor = ({
                         <i className="bi bi-pencil-square"></i>
                       </Button>
 
+                      {/* Eliminar */}
                       <Button
-                        style={estilos.btnDelete}
+                        style={{ ...estilos.btnAccion, ...estilos.btnDelete }}
                         onClick={() => {
                           abrirModalEliminacion(proveedor);
                           setIdTarjetaActiva(null);
@@ -173,6 +174,19 @@ const TarjetaProveedor = ({
                         aria-label={`Eliminar ${proveedor.nombre}`}
                       >
                         <i className="bi bi-trash3-fill"></i>
+                      </Button>
+
+
+                      {/* Exportar PDF */}
+                      <Button
+                        style={{ ...estilos.btnAccion, ...estilos.btnPDF }}
+                        onClick={() => {
+                          generarPDFProveedor(proveedor);
+                          setIdTarjetaActiva(null);
+                        }}
+                        aria-label={`Exportar PDF de ${proveedor.nombre}`}
+                      >
+                        <i className="bi bi-file-earmark-pdf-fill"></i>
                       </Button>
                     </div>
                   </div>

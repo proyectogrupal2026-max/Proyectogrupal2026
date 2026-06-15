@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
+
+// Librerías de exportación
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+// Componentes modales y complementos
 import ModalRegistroProducto from "../components/productos/ModalRegistroProducto";
 import NotificacionOperacion from "../components/NotificacionOperacion";
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
@@ -21,7 +27,7 @@ const Productos = () => {
   const [mostrarModalEliminacion, setMostrarModalEliminacion] = useState(false);
   const [mostrarModalEdicion, setMostrarModalEdicion] = useState(false);
 
-  // Adaptado al esquema: nombre, precio_compra, precio_venta, stock
+  // Estados originales del esquema de base de datos
   const [nuevoProducto, setNuevoProducto] = useState({
     nombre: "",
     categoria_producto: "",
@@ -73,7 +79,7 @@ const Productos = () => {
       const { data, error } = await supabase
         .from("categorias")
         .select("*")
-        .order("id", { ascending: true }); // id en lugar de id_categoria
+        .order("id", { ascending: true });
       if (error) throw error;
       setCategorias(data || []);
     } catch (err) {
@@ -87,7 +93,7 @@ const Productos = () => {
       const { data, error } = await supabase
         .from("productos")
         .select("*, categorias(nombre_categoria)")
-        .order("id", { ascending: false }); // id en lugar de id_producto
+        .order("id", { ascending: false });
       if (error) throw error;
       setProductos(data || []);
     } catch (err) {
@@ -259,6 +265,65 @@ const Productos = () => {
     }
   };
 
+  // --- LÓGICA DE EXPORTACIÓN REPORTE INDIVIDUAL PDF ---
+  const generarPDFProducto = (prod) => {
+    const doc = new jsPDF();
+
+    // Título Principal Corporativo
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(33, 37, 41);
+    doc.text("MARTITATOOLS - FICHA DE PRODUCTO", 14, 20);
+
+    // Metadata informativa
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(108, 117, 125);
+    const emision = new Date().toLocaleString("es-NI");
+    doc.text(`Fecha y Hora de Emisión: ${emision}`, 14, 26);
+
+    // Divisor decorativo
+    doc.setDrawColor(13, 110, 253);
+    doc.setLineWidth(1);
+    doc.line(14, 30, 196, 30);
+
+    // Datos estructurados en tabla formal
+    const categoriaNombre = prod.categorias?.nombre_categoria || "Sin asignar";
+    const pVenta = parseFloat(prod.precio_venta || 0).toLocaleString('es-NI', { minimumFractionDigits: 2 });
+    const pCompra = parseFloat(prod.precio_compra || 0).toLocaleString('es-NI', { minimumFractionDigits: 2 });
+
+    autoTable(doc, {
+      startY: 38,
+      theme: "striped",
+      headStyles: {
+        fillColor: [13, 110, 253],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+      },
+      head: [["Atributo Técnico", "Detalle de Registro Interno"]],
+      body: [
+        ["Código Identificador (ID)", `#${prod.id}`],
+        ["Nombre del Artículo", prod.nombre || "-"],
+        ["Categoría de Clasificación", categoriaNombre],
+        ["Existencias en Almacén (Stock)", `${prod.stock} unidades`],
+        ["Precio Base de Compra", `C$ ${pCompra}`],
+        ["Precio General de Venta", `C$ ${pVenta}`],
+      ],
+      styles: { fontSize: 11, cellPadding: 6 },
+      columnStyles: {
+        0: { fontStyle: "bold", width: 60 },
+      },
+    });
+
+    // Cierre o pie del reporte técnico
+    const yFinal = doc.lastAutoTable.finalY || 45;
+    doc.setFontSize(9);
+    doc.setTextColor(142, 142, 142);
+    doc.text("Ferretería Martita Castilla - Control Digital e Inteligencia de Negocio", 14, yFinal + 15);
+
+    doc.save(`Ficha_Producto_${prod.id}_${prod.nombre?.replace(/\s+/g, '_')}.pdf`);
+  };
+
   useEffect(() => {
     if (!textoBusqueda.trim()) {
       setProductosFiltrados(productos);
@@ -304,11 +369,10 @@ const Productos = () => {
             style={{
               height: '42px',
               borderRadius: '10px',
-              minWidth: '45px' // Mantiene la forma en móvil cuando no hay texto
+              minWidth: '45px'
             }}
           >
             <i className="bi-plus-lg"></i>
-            {/* Texto responsivo: aparece desde 'sm' para que el botón se estire en PC */}
             <span className="d-none d-sm-inline ms-2 fw-semibold" style={{ whiteSpace: 'nowrap' }}>
               Nuevo Producto
             </span>
@@ -328,20 +392,35 @@ const Productos = () => {
         </Col>
       </Row>
 
-      {!cargando && productosPaginados.length > 0 && (
+      {cargando ? (
+        <div className="text-center my-5 py-5">
+          <Spinner animation="border" variant="primary" />
+          <h4 className="text-muted mt-3 fw-semibold">Cargando productos...</h4>
+        </div>
+      ) : productosFiltrados.length === 0 ? (
+        <div className="text-center my-5 py-5 text-muted">
+          <i className="bi bi-box-seam fs-1 d-block mb-2"></i>
+          <h4 className="fw-semibold">No se encontraron productos coincidentes.</h4>
+        </div>
+      ) : (
         <Row>
+          {/* Vista Móvil */}
           <Col xs={12} className="d-lg-none">
             <TarjetaProducto
               productos={productosPaginados}
               abrirModalEdicion={(p) => { setProductoEditar(p); setMostrarModalEdicion(true); }}
               abrirModalEliminacion={(p) => { setProductoAEliminar(p); setMostrarModalEliminacion(true); }}
+              generarPDFProducto={generarPDFProducto}
             />
           </Col>
+          
+          {/* Vista Escritorio */}
           <Col lg={12} className="d-none d-lg-block">
             <TablaProductos
               productos={productosPaginados}
               abrirModalEdicion={(p) => { setProductoEditar(p); setMostrarModalEdicion(true); }}
               abrirModalEliminacion={(p) => { setProductoAEliminar(p); setMostrarModalEliminacion(true); }}
+              generarPDFProducto={generarPDFProducto}
             />
           </Col>
         </Row>

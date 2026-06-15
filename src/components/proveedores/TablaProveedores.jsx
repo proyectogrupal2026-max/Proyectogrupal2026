@@ -6,6 +6,7 @@ const TablaProveedores = ({
   proveedores,
   abrirModalEdicion,
   abrirModalEliminacion,
+  generarPDFProveedor // <--- Recibimos la nueva función como prop
 }) => {
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +18,6 @@ const TablaProveedores = ({
     }
   }, [proveedores]);
 
-  // Estilos modernos, centrados y unificados con los demás módulos
   const estilos = {
     tablaContainer: {
       backgroundColor: "#ffffff",
@@ -37,27 +37,28 @@ const TablaProveedores = ({
     fila: {
       borderBottom: "1px solid #f1f5f9",
     },
-    btnEdit: {
+    btnAccion: {
       width: "38px",
       height: "38px",
       borderRadius: "10px",
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
+    },
+    btnEdit: {
       border: "1px solid #fef3c7",
       color: "#f59e0b",
       backgroundColor: "#fffbeb",
     },
     btnDelete: {
-      width: "38px",
-      height: "38px",
-      borderRadius: "10px",
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
       border: "1px solid #fee2e2",
       color: "#ef4444",
       backgroundColor: "#fef2f2",
+    },
+    btnPDF: {
+      border: "1px solid #fee2e2",
+      color: "#dc3545",
+      backgroundColor: "#fdf2f2",
     }
   };
 
@@ -78,11 +79,11 @@ const TablaProveedores = ({
           <Table borderless hover responsive className="align-middle mb-0 text-center" style={{ tableLayout: 'fixed', width: '100%' }}>
             <thead style={estilos.header} className="bg-light border-bottom">
               <tr className="text-secondary text-uppercase">
-                <th className="py-4" style={{ width: "15%" }}>ID</th>
-                <th className="py-4" style={{ width: "30%" }}>Nombre</th>
-                <th className="py-4 d-none d-md-table-cell" style={{ width: "20%" }}>Teléfono</th>
-                <th className="py-4 d-none d-lg-table-cell" style={{ width: "20%" }}>Dirección</th>
-                <th className="py-4" style={{ width: "15%" }}>Acciones</th>
+                <th className="py-4" style={{ width: "12%" }}>ID</th>
+                <th className="py-4" style={{ width: "28%" }}>Nombre</th>
+                <th className="py-4 d-none d-md-table-cell" style={{ width: "18%" }}>Teléfono</th>
+                <th className="py-4 d-none d-lg-table-cell" style={{ width: "24%" }}>Dirección</th>
+                <th className="py-4" style={{ width: "18%" }}>Acciones</th>
               </tr>
             </thead>
 
@@ -93,9 +94,9 @@ const TablaProveedores = ({
                     #{proveedor.id}
                   </td>
 
-                  <td className="py-3 fw-bold text-dark">{proveedor.nombre}</td>
+                  <td className="py-3 fw-bold text-dark text-truncate">{proveedor.nombre}</td>
 
-                  <td className="py-3 d-none d-md-table-cell">
+                  <td className="py-3 d-none d-md-table-cell text-truncate">
                     <span className="text-muted">
                       <i className="bi bi-telephone me-2"></i>
                       {proveedor.telefono || "N/A"}
@@ -111,8 +112,9 @@ const TablaProveedores = ({
 
                   <td className="py-3">
                     <div className="d-flex justify-content-center gap-2">
+                      {/* Editar */}
                       <Button
-                        style={estilos.btnEdit}
+                        style={{ ...estilos.btnAccion, ...estilos.btnEdit }}
                         className="shadow-sm"
                         onClick={() => abrirModalEdicion(proveedor)}
                         title="Editar proveedor"
@@ -120,13 +122,24 @@ const TablaProveedores = ({
                         <i className="bi bi-pencil-square fs-6"></i>
                       </Button>
 
+                      {/* Eliminar */}
                       <Button
-                        style={estilos.btnDelete}
+                        style={{ ...estilos.btnAccion, ...estilos.btnDelete }}
                         className="shadow-sm"
                         onClick={() => abrirModalEliminacion(proveedor)}
                         title="Eliminar proveedor"
                       >
                         <i className="bi bi-trash3-fill fs-6"></i>
+                      </Button>
+
+                      {/* Exportar PDF del Proveedor */}
+                      <Button
+                        style={{ ...estilos.btnAccion, ...estilos.btnPDF }}
+                        className="shadow-sm"
+                        onClick={() => generarPDFProveedor(proveedor)}
+                        title="Exportar PDF de Proveedor"
+                      >
+                        <i className="bi bi-file-earmark-pdf-fill fs-6"></i>
                       </Button>
                     </div>
                   </td>

@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Spinner, Alert } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
 
+// Librerías de exportación
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
 import ModalRegistroProveedor from "../components/proveedores/ModalRegistroProveedores";
 import ModalEdicionProveedor from "../components/proveedores/ModalEdicionProveedor";
 import ModalEliminacionProveedor from "../components/proveedores/ModalEliminacionProveedor";
@@ -9,7 +13,7 @@ import TablaProveedores from "../components/proveedores/TablaProveedores";
 import TarjetaProveedor from "../components/proveedores/TarjetaProveedores";
 import NotificacionOperacion from "../components/NotificacionOperacion";
 
-// NUEVOS COMPONENTES DE LÓGICA
+// Componentes de lógica unificados
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import Paginacion from "../components/ordenamiento/Paginacion";
 
@@ -18,7 +22,7 @@ const Proveedores = () => {
   const [proveedores, setProveedores] = useState([]);
   const [cargando, setCargando] = useState(true);
 
-  // --- NUEVOS ESTADOS: BÚSQUEDA Y PAGINACIÓN ---
+  // --- BÚSQUEDA Y PAGINACIÓN ---
   const [proveedoresFiltrados, setProveedoresFiltrados] = useState([]);
   const [textoBusqueda, setTextoBusqueda] = useState("");
   const [registrosPorPagina, establecerRegistrosPorPagina] = useState(5);
@@ -56,18 +60,15 @@ const Proveedores = () => {
   const cargarProveedores = async () => {
     try {
       setCargando(true);
-
       const { data, error } = await supabase
         .from("proveedores")
         .select("*")
-        .order("id", { ascending: false }); // <-- CORREGIDO: Los últimos registros salen de primero
+        .order("id", { ascending: false });
 
       if (error) throw error;
-
       setProveedores(data || []);
     } catch (error) {
       console.error("Error al cargar proveedores:", error.message);
-
       setToast({
         mostrar: true,
         mensaje: "Error al cargar los proveedores.",
@@ -78,7 +79,7 @@ const Proveedores = () => {
     }
   };
 
-  // --- NUEVA LÓGICA: FILTRADO ---
+  // --- FILTRADO ---
   useEffect(() => {
     if (!textoBusqueda.trim()) {
       setProveedoresFiltrados(proveedores);
@@ -92,10 +93,10 @@ const Proveedores = () => {
       });
       setProveedoresFiltrados(filtrados);
     }
-    establecerPaginaActual(1); // Resetear a pag 1 al buscar
+    establecerPaginaActual(1);
   }, [textoBusqueda, proveedores]);
 
-  // --- NUEVA LÓGICA: PAGINACIÓN ---
+  // --- PAGINACIÓN ---
   const proveedoresPaginados = proveedoresFiltrados.slice(
     (paginaActual - 1) * registrosPorPagina,
     paginaActual * registrosPorPagina
@@ -112,7 +113,6 @@ const Proveedores = () => {
       telefono: proveedor.telefono || "",
       direccion: proveedor.direccion || "",
     });
-
     setMostrarModalEdicion(true);
   };
 
@@ -123,20 +123,12 @@ const Proveedores = () => {
 
   const manejoCambioInput = (e) => {
     const { name, value } = e.target;
-
-    setNuevoProveedor((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setNuevoProveedor((prev) => ({ ...prev, [name]: value }));
   };
 
   const manejoCambioInputEdicion = (e) => {
     const { name, value } = e.target;
-
-    setProveedorEditar((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setProveedorEditar((prev) => ({ ...prev, [name]: value }));
   };
 
   const agregarProveedor = async () => {
@@ -159,7 +151,6 @@ const Proveedores = () => {
       ]);
 
       if (error) {
-        // Captura si el proveedor ya existe en la base de datos (Unique Violation)
         if (error.code === "23505") {
           setToast({
             mostrar: true,
@@ -177,17 +168,11 @@ const Proveedores = () => {
         tipo: "exito",
       });
 
-      setNuevoProveedor({
-        nombre: "",
-        telefono: "",
-        direccion: "",
-      });
-
+      setNuevoProveedor({ nombre: "", telefono: "", direccion: "" });
       setMostrarModalRegistro(false);
       await cargarProveedores();
     } catch (error) {
       console.error("Error al registrar proveedor:", error.message);
-
       setToast({
         mostrar: true,
         mensaje: "Error al registrar el proveedor.",
@@ -228,7 +213,6 @@ const Proveedores = () => {
       await cargarProveedores();
     } catch (error) {
       console.error("Error al actualizar proveedor:", error.message);
-
       setToast({
         mostrar: true,
         mensaje: "Error al actualizar el proveedor.",
@@ -258,13 +242,63 @@ const Proveedores = () => {
       await cargarProveedores();
     } catch (error) {
       console.error("Error al eliminar proveedor:", error.message);
-
       setToast({
         mostrar: true,
         mensaje: "Error al eliminar el proveedor.",
         tipo: "error",
       });
     }
+  };
+
+  // --- LÓGICA DE EXPORTACIÓN REPORTE INDIVIDUAL PDF ---
+  const generarPDFProveedor = (prov) => {
+    const doc = new jsPDF();
+
+    // Título Principal Corporativo
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(33, 37, 41);
+    doc.text("MARTITATOOLS - EXPEDIENTE DE PROVEEDOR", 14, 20);
+
+    // Metadata informativa
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(108, 117, 125);
+    const emision = new Date().toLocaleString("es-NI");
+    doc.text(`Fecha y Hora de Emisión: ${emision}`, 14, 26);
+
+    // Divisor estético azul
+    doc.setDrawColor(13, 110, 253);
+    doc.setLineWidth(1);
+    doc.line(14, 30, 196, 30);
+
+    autoTable(doc, {
+      startY: 38,
+      theme: "striped",
+      headStyles: {
+        fillColor: [13, 110, 253],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+      },
+      head: [["Campo de Registro", "Información Detallada"]],
+      body: [
+        ["ID Proveedor", `#${prov.id}`],
+        ["Nombre de la Entidad / Contacto", prov.nombre || "-"],
+        ["Línea de Teléfono Móvil", prov.telefono || "No especificado"],
+        ["Dirección Física / Sucursal", prov.direccion || "No especificada"],
+      ],
+      styles: { fontSize: 11, cellPadding: 6 },
+      columnStyles: {
+        0: { fontStyle: "bold", width: 60 },
+      },
+    });
+
+    const yFinal = doc.lastAutoTable.finalY || 45;
+    doc.setFontSize(9);
+    doc.setTextColor(142, 142, 142);
+    doc.text("Ferretería Martita Castilla - Sistema de Control y Cadena de Suministro", 14, yFinal + 15);
+
+    doc.save(`Proveedor_${prov.id}_${prov.nombre?.replace(/\s+/g, '_')}.pdf`);
   };
 
   return (
@@ -327,23 +361,26 @@ const Proveedores = () => {
         <>
           {proveedoresFiltrados.length > 0 && (
             <>
+              {/* Vista Móvil */}
               <div className="d-lg-none">
                 <TarjetaProveedor
                   proveedores={proveedoresPaginados}
                   abrirModalEdicion={abrirModalEdicion}
                   abrirModalEliminacion={abrirModalEliminacion}
+                  generarPDFProveedor={generarPDFProveedor} // <--- Inyectado para móviles
                 />
               </div>
 
+              {/* Vista Desktop */}
               <div className="d-none d-lg-block">
                 <TablaProveedores
                   proveedores={proveedoresPaginados}
                   abrirModalEdicion={abrirModalEdicion}
                   abrirModalEliminacion={abrirModalEliminacion}
+                  generarPDFProveedor={generarPDFProveedor} // <--- Inyectado para tablas
                 />
               </div>
 
-              {/* COMPONENTE DE PAGINACIÓN */}
               <Paginacion
                 registrosPorPagina={registrosPorPagina}
                 totalRegistros={proveedoresFiltrados.length}
@@ -356,6 +393,7 @@ const Proveedores = () => {
         </>
       )}
 
+      {/* Modales y Toasts de Operación permanecen iguales */}
       <ModalRegistroProveedor
         mostrarModal={mostrarModalRegistro}
         setMostrarModal={setMostrarModalRegistro}

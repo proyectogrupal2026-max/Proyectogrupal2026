@@ -1,216 +1,357 @@
-import React from "react";
-import { Container, Row, Col, Card } from "react-bootstrap";
-import fotoNegocio1 from "../components/img/1.jpg";
-import fotoNegocio2 from "../components/img/2.jpg";
+import React, { useEffect, useState } from "react";
+import { Container, Row, Col, Card, Spinner, Form, Button } from "react-bootstrap";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell
+} from "recharts";
+import { supabase } from "../database/supabaseconfig";
+import { utils, writeFile } from 'xlsx';
 
-const Inicio = () => {
-  const animaciones = `
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=Lexend:wght@300;600;800&display=swap');
+export default function Inicio() {
+  const [cargando, setCargando] = useState(true);
+  
+  // Rango de fechas por defecto en formato Nicaragua (YYYY-MM-DD)
+  const [fechaDesde, setFechaDesde] = useState(
+    new Date().toLocaleDateString("en-CA", { timeZone: "America/Managua" })
+  );
+  const [fechaHasta, setFechaHasta] = useState(
+    new Date().toLocaleDateString("en-CA", { timeZone: "America/Managua" })
+  );
+  
+  const [estadisticas, setEstadisticas] = useState({
+    totalVentas: 0,
+    productosVendidos: 0,
+    cantidadVentas: 0,
+    ventasPorHora: [],
+    ventasPorCategoria: []
+  });
 
-    .inicio-container {
-      font-family: 'Inter', sans-serif;
-      color: #1e293b;
+  const COLORES = ["#5e26b2", "#39ff95", "#ff6bc6", "#8b46ff", "#00d4ff", "#ffd93d"];
+
+  useEffect(() => {
+    cargarDatos(fechaDesde, fechaHasta);
+  }, [fechaDesde, fechaHasta]);
+
+  const cargarDatos = async (desde, hasta) => {
+    try {
+      setCargando(true);
+      
+      const inicioRango = `${desde} 00:00:00`;
+      const finRango = `${hasta} 23:59:59`;
+
+      // 1. Obtener ventas en el rango seleccionado
+      const { data: ventas, error } = await supabase
+        .from("ventas")
+        .select("id, total, fecha_venta")
+        .gte("fecha_venta", inicioRango)
+        .lte("fecha_venta", finRango);
+
+      if (error) throw error;
+
+      const totalVentas = ventas?.reduce((sum, v) => sum + (Number(v.total) || 0), 0) || 0;
+      const idsVentas = ventas?.map(v => v.id) || [];
+      
+      let productosVendidosContador = 0;
+      let ventasPorCategoriaMapeo = [];
+
+      // 2. Obtener detalles vinculando usando ALIAS seguro para evitar conflictos de mayúsculas
+      if (idsVentas.length > 0) {
+        const { data: detalles, error: errorDetalles } = await supabase
+          .from("detalles_ventas")
+          .select(`
+            cantidad,
+            total,
+            producto:producto_id (
+              nombre,
+              categorias ( nombre_categoria )
+            )
+          `)
+          .in("venta_id", idsVentas);
+
+        if (errorDetalles) throw errorDetalles;
+
+        detalles?.forEach(d => {
+          // Sumar unidades vendidas
+          productosVendidosContador += Number(d.cantidad) || 0;
+
+          // Extraer nombre de categoría de forma segura usando el alias 'producto'
+          const categoria = d.producto?.categorias?.nombre_categoria || "Sin categoría";
+          const existente = ventasPorCategoriaMapeo.find(c => c.name === categoria);
+
+          if (existente) {
+            existente.value += Number(d.total) || 0;
+          } else {
+            ventasPorCategoriaMapeo.push({ name: categoria, value: Number(d.total) || 0 });
+          }
+        });
+      }
+
+      ventasPorCategoriaMapeo.sort((a, b) => b.value - a.value);
+
+      // 3. Distribución de ventas por hora local de Nicaragua
+      const horaMap = Array(24).fill(0);
+      ventas?.forEach(venta => {
+        if (!venta.fecha_venta) return;
+        
+        const fechaObj = new Date(venta.fecha_venta);
+        const horaLocal = fechaObj.toLocaleTimeString("en-US", {
+          timeZone: "America/Managua",
+          hour12: false,
+          hour: "2-digit"
+        });
+        
+        const hora = parseInt(horaLocal, 10);
+        if (hora >= 0 && hora < 24) {
+          horaMap[hora] += Number(venta.total) || 0;
+        }
+      });
+
+      const ventasPorHora = [];
+      for (let h = 8; h <= 22; h++) {
+        ventasPorHora.push({
+          hora: `${h.toString().padStart(2, "0")}:00`,
+          total: Math.round(horaMap[h])
+        });
+      }
+
+      setEstadisticas({
+        totalVentas,
+        productosVendidos: productosVendidosContador,
+        cantidadVentas: ventas?.length || 0,
+        ventasPorHora,
+        ventasPorCategoria: ventasPorCategoriaMapeo
+      });
+
+    } catch (err) {
+      console.error("Error cargando estadísticas en MartitaTools:", err);
+    } finally {
+      setCargando(false);
     }
+  };
 
-    h1, h2, h3, .h-style {
-      font-family: 'Lexend', sans-serif;
-      letter-spacing: -0.03em;
-    }
+  const descargarExcel = async () => {
+    try {
+      setCargando(true);
+      const inicioRango = `${fechaDesde} 00:00:00`;
+      const finRango = `${fechaHasta} 23:59:59`;
 
-    .text-gradient-blue {
-      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-weight: 800;
-    }
+      const { data: ventas, error: errorVentas } = await supabase
+        .from("ventas")
+        .select("id, fecha_venta, total, vendedor_id, cliente_id")
+        .gte("fecha_venta", inicioRango)
+        .lte("fecha_venta", finRango)
+        .order("fecha_venta", { ascending: false });
 
-    .text-gradient-green {
-      background: linear-gradient(135deg, #10b981 0%, #065f46 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-weight: 800;
-    }
+      if (errorVentas) throw errorVentas;
 
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+      const idsVentas = ventas?.map(v => v.id) || [];
+      let detallesVenta = [];
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
+      if (idsVentas.length > 0) {
+        const { data: detalles, error: errorDetalles } = await supabase
+          .from("detalles_ventas")
+          .select(`
+            id,
+            venta_id,
+            cantidad,
+            precio_venta,
+            total,
+            producto:producto_id (
+              nombre,
+              categorias ( nombre_categoria )
+            )
+          `)
+          .in("venta_id", idsVentas)
+          .order("venta_id");
 
-    .anim-fade-in { animation: fadeIn 1.2s ease-out forwards; }
-    .anim-fade-up { animation: fadeInUp 0.8s ease-out forwards; }
-    .delay-1 { animation-delay: 0.2s; }
-    .delay-2 { animation-delay: 0.4s; }
-    
-    .hover-card {
-      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-      border: 1px solid rgba(0,0,0,0.05) !important;
-      border-radius: 24px !important;
-    }
+        if (errorDetalles) console.error("Error en detalles:", errorDetalles);
+        else detallesVenta = detalles || [];
+      }
 
-    .hover-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.06) !important;
-    }
-    
-    .icon-circle {
-      width: 65px;
-      height: 65px;
-      border-radius: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
-      font-size: 1.6rem;
-    }
+      const wb = utils.book_new();
 
-    .glass-pill {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 6px 18px;
-      border-radius: 50px;
-      display: inline-block;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-    }
+      if (ventas && ventas.length > 0) {
+        const ventasFormateadas = ventas.map(v => ({
+          "ID Venta": v.id,
+          "Fecha": new Date(v.fecha_venta).toLocaleString("es-NI", { timeZone: "America/Managua" }),
+          "ID Vendedor": v.vendedor_id,
+          "ID Cliente": v.cliente_id,
+          "Total C$": Number(v.total)
+        }));
+        const wsVentas = utils.json_to_sheet(ventasFormateadas);
+        utils.book_append_sheet(wb, wsVentas, "Ventas");
+      } else {
+        utils.book_append_sheet(wb, utils.json_to_sheet([{ Mensaje: "No hay ventas en este rango" }]), "Ventas");
+      }
 
-    .call-to-action-line {
-      border-left: 4px solid #2563eb;
-      padding-left: 25px;
-      margin: 40px 0;
-      font-family: 'Lexend', sans-serif;
-    }
-  `;
+      if (detallesVenta && detallesVenta.length > 0) {
+        const detallesFormateados = detallesVenta.map(d => ({
+          "ID Detalle": d.id,
+          "ID Venta": d.venta_id,
+          "Producto": d.producto?.nombre || "N/A",
+          "Categoría": d.producto?.categorias?.nombre_categoria || "N/A",
+          "Cantidad": d.cantidad,
+          "Precio Venta C$": Number(d.precio_venta),
+          "Total Línea C$": Number(d.total)
+        }));
+        const wsDetalles = utils.json_to_sheet(detallesFormateados);
+        utils.book_append_sheet(wb, wsDetalles, "Detalles_Ventas");
+      } else {
+        utils.book_append_sheet(wb, utils.json_to_sheet([{ Mensaje: "No hay detalles" }]), "Detalles_Ventas");
+      }
 
-  const estilos = {
-    heroSection: {
-      position: "relative",
-      borderRadius: "32px",
-      overflow: "hidden",
-      marginBottom: "40px",
-      minHeight: "480px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      textAlign: "center",
-      color: "white",
-      boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
-    },
-    heroImage: {
-      position: "absolute",
-      width: "100%", height: "100%",
-      objectFit: "cover", zIndex: 0,
-    },
-    heroOverlay: {
-      position: "absolute",
-      top: 0, left: 0, width: "100%", height: "100%",
-      background: "linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.7))",
-      zIndex: 1
-    },
-    heroContent: { position: "relative", zIndex: 2, padding: "30px", maxWidth: "850px" },
-    imgPrincipal: {
-      width: "100%",
-      maxWidth: "750px",
-      borderRadius: "28px",
-      boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)",
-      margin: "40px auto",
-      display: "block"
+      writeFile(wb, `Reporte_MartitaTools_${fechaDesde}_a_${fechaHasta}.xlsx`);
+
+    } catch (err) {
+      console.error("Error generando Excel:", err);
+    } finally {
+      setCargando(false);
     }
   };
 
   return (
-    <Container className="py-5 inicio-container anim-fade-in">
-      <style>{animaciones}</style>
-
-      {/* 1. HERO AREA */}
-      <div style={estilos.heroSection} className="anim-fade-up">
-        <img src={fotoNegocio1} style={estilos.heroImage} alt="Ferretería Martita" />
-        <div style={estilos.heroOverlay}></div>
-        <div style={estilos.heroContent}>
-          <div className="glass-pill mb-4 fw-bold">Multiplataforma Real-Time</div>
-          <h1 className="display-2 fw-bold mb-3">MartitaTools</h1>
-          <p className="lead fs-3 fw-light mb-0" style={{ fontStyle: 'italic', color: '#f8fafc' }}>
-            "El que no se actualiza no se estanca: simplemente deja de existir"
-          </p>
+    <div className="mt-2">
+      <div className="mb-4 d-flex justify-content-between align-items-center">
+        <div>
+          <h2>Dashboard</h2>
+          <h6>Estadísticas de MartitaTools</h6>
         </div>
+        {cargando && <Spinner animation="border" variant="primary" size="sm" />}
       </div>
 
-      {/* 2. THE CHALLENGE (PREGUNTA DE ENGANCHE) */}
-      <div className="anim-fade-up delay-1 container" style={{ maxWidth: "800px" }}>
-        <div className="call-to-action-line">
-          <h3 className="fw-bold text-dark m-0 fs-2" style={{ lineHeight: "1.2" }}>
-            ¿Vas a digitalizar tu stock hoy o vas a esperar a rematar el inventario mañana?
-          </h3>
-        </div>
-      </div>
-
-      {/* 3. THE NARRATIVE (PWA FOCUS) */}
-      <div className="text-center mb-5 anim-fade-up delay-1 pt-4">
-        <Row className="justify-content-center">
-          <Col lg={9}>
-            <h2 className="display-5 fw-bold mb-4">La Auditoría de la Realidad</h2>
-            <p className="fs-5 mb-5 text-secondary px-md-5" style={{ lineHeight: "1.8", fontWeight: "300" }}>
-              <span className="text-gradient-blue uppercase small d-block mb-2">Diagnóstico de Operaciones</span>
-              Miles de córdobas se pierden silenciosamente debido a una gestión manual. El papel es lento y los registros físicos son vulnerables. En <strong>Ferretería Martita Castilla</strong>, cada segundo que un vendedor duda sobre un precio o un stock, es una venta que se pierde.
-            </p>
-
-            <h2 className="display-5 fw-bold mb-4">La Potencia de una PWA</h2>
-            <p className="fs-5 mb-5 text-secondary px-md-5" style={{ lineHeight: "1.8", fontWeight: "300" }}>
-              <span className="text-gradient-green uppercase small d-block mb-2">Estrategia Tecnológica</span>
-              MartitaTools es una <strong>Progressive Web App (PWA)</strong> de alto rendimiento. Se instala en segundos en cualquier dispositivo Android o PC, permitiendo una sincronización total con la nube. Es la infraestructura digital que inyecta agilidad inmediata a tu capital de trabajo.
-            </p>
-            <img src={fotoNegocio2} style={estilos.imgPrincipal} alt="Ferretería" className="img-fluid shadow-lg" />
-          </Col>
-        </Row>
-      </div>
-
-      {/* 4. VALUE PROPOSITIONS */}
-      <Row className="g-4 text-center mt-4">
-        <Col md={4} className="anim-fade-up delay-2">
-          <Card className="p-5 hover-card">
-            <div className="icon-circle shadow-sm" style={{ background: "#eff6ff", color: "#2563eb" }}>
-              <i className="bi bi-phone-vibrate"></i>
-            </div>
-            <h4 className="fw-bold mb-3">Acceso Nativo</h4>
-            <p className="text-muted lh-base">Instálalo como una App nativa. Rapidez total desde el escritorio o desde tu celular.</p>
-          </Card>
+      <Row className="mb-4">
+        <Col xs={6} md={3}>
+          <Form.Group>
+            <Form.Label>Desde</Form.Label>
+            <Form.Control
+              type="date"
+              value={fechaDesde}
+              onChange={(e) => setFechaDesde(e.target.value)}
+              disabled={cargando}
+            />
+          </Form.Group>
         </Col>
-        <Col md={4} className="anim-fade-up delay-2">
-          <Card className="p-5 hover-card">
-            <div className="icon-circle shadow-sm" style={{ background: "#fdf2f8", color: "#db2777" }}>
-              <i className="bi bi-arrow-repeat"></i>
-            </div>
-            <h4 className="fw-bold mb-3">Sincronía Total</h4>
-            <p className="text-muted lh-base">Cualquier cambio en el stock se refleja al instante para todo tu equipo de ventas.</p>
-          </Card>
+        <Col xs={6} md={3}>
+          <Form.Group>
+            <Form.Label>Hasta</Form.Label>
+            <Form.Control
+              type="date"
+              value={fechaHasta}
+              onChange={(e) => setFechaHasta(e.target.value)}
+              disabled={cargando}
+            />
+          </Form.Group>
         </Col>
-        <Col md={4} className="anim-fade-up delay-2">
-          <Card className="p-5 hover-card">
-            <div className="icon-circle shadow-sm" style={{ background: "#f0fdf4", color: "#16a34a" }}>
-              <i className="bi bi-database-fill-check"></i>
-            </div>
-            <h4 className="fw-bold">Nube Supabase</h4>
-            <p className="text-muted lh-base">Tus datos protegidos y disponibles 24/7 con tecnología de base de datos de élite.</p>
-          </Card>
+        <Col md={3} className="d-flex align-items-end mt-2 mt-md-0">
+          <Button variant="success" onClick={descargarExcel} disabled={cargando}>
+            <i className="bi bi-file-earmark-excel me-2"></i>
+            Descargar Excel
+          </Button>
         </Col>
       </Row>
 
-      {/* 5. FOOTER CLOSING */}
-      <div className="mt-5 pt-5 text-center anim-fade-up delay-2">
-        <h3 className="fw-bold display-6 mb-3">El futuro es digital y es ahora</h3>
-        <p className="text-secondary fs-5 fw-light">
-          Innovación estratégica para <strong>Ferretería Martita Castilla</strong>.<br />
-          <span className="small opacity-50 text-uppercase fw-bold" style={{ letterSpacing: "3px" }}>Juigalpa 2026</span>
-        </p>
-      </div>
-    </Container>
-  );
-};
+      <div style={{ opacity: cargando ? 0.6 : 1, transition: "opacity 0.2s ease" }}>
+        <Row className="g-4 mb-5">
+          <Col md={6} lg={4}>
+            <Card className="h-100 text-white shadow border-0" style={{ background: "linear-gradient(135deg, #28a745, #34ce57)" }}>
+              <Card.Body>
+                <h5>Ventas Totales</h5>
+                <h2>C$ {estadisticas.totalVentas.toFixed(2)}</h2>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={6} lg={4}>
+            <Card className="h-100 text-white shadow border-0" style={{ background: "linear-gradient(135deg, #0166d3, #3399ff)" }}>
+              <Card.Body>
+                <h5>Facturas Emitidas</h5>
+                <h2>{estadisticas.cantidadVentas} Ventas</h2>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={6} lg={4}>
+            <Card className="h-100 text-white shadow border-0" style={{ background: "linear-gradient(135deg, #e27d01, #ffa500)" }}>
+              <Card.Body>
+                <h5>Productos Vendidos</h5>
+                <h2>{estadisticas.productosVendidos} Unidades</h2>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
 
-export default Inicio;
+        <Row className="g-4">
+          <Col lg={8}>
+            <Card className="shadow border-0">
+              <Card.Body>
+                <h5 className="mb-3">Flujo de Ventas por Hora</h5>
+                <ResponsiveContainer width="100%" height={360}>
+                  <LineChart data={estadisticas.ventasPorHora}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="hora" />
+                    <YAxis tickFormatter={(v) => `C$ ${v}`} />
+                    <Tooltip formatter={(v) => [`C$ ${v}`, "Monto"]} />
+                    <Line type="monotone" dataKey="total" stroke="#5e26b2" strokeWidth={4} dot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col lg={4}>
+            <Card className="shadow border-0">
+              <Card.Body>
+                <h5 className="mb-3">Ventas por Categoría</h5>
+                <ResponsiveContainer width="100%" height={360}>
+                  <PieChart>
+                    <Pie
+                      data={estadisticas.ventasPorCategoria.length > 0 ? estadisticas.ventasPorCategoria : [{ name: "Sin datos", value: 0.1 }]}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={110}
+                      label
+                    >
+                      {estadisticas.ventasPorCategoria.map((_, i) => (
+                        <Cell key={`cell-${i}`} fill={COLORES[i % COLORES.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v) => `C$ ${v}`} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Dashboards de Tableau (Web Components) */}
+        <Row className="mt-5">
+          <Col lg={12}>
+            <h4 className="mb-4">Reportes Avanzados</h4>
+            <Card className="shadow-sm mb-4">
+              <Card.Body>
+                <h5>Dashboard: Tasa de Rotación</h5>
+                <tableau-viz 
+                  src="https://public.tableau.com/views/TrabajoMartitaToolsDashboard2/Dashboard1" 
+                  width="100%" 
+                  height="700px" 
+                  toolbar="bottom"
+                ></tableau-viz>
+              </Card.Body>
+            </Card>
+            <Card className="shadow-sm">
+              <Card.Body>
+                <h5>Dashboard: Ventas Totales</h5>
+                <tableau-viz 
+                  src="https://public.tableau.com/views/TrabajoMartitaToolsDashboard1/DashboardVentasTotales" 
+                  width="100%" 
+                  height="700px" 
+                  toolbar="bottom"
+                ></tableau-viz>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </div>
+    </div>
+  );
+}

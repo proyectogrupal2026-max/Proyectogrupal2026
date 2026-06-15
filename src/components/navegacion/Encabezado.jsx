@@ -3,11 +3,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Container, Nav, Navbar, Offcanvas } from "react-bootstrap";
 import logo from "../../assets/logo.png";
 import { useAuth } from "../context/AuthContext";
+import ChatIA from "../ia/ChatIA";
 
 const Encabezado = () => {
   const [mostrarMenu, setMostrarMenu] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const [mostrarChatIA, setMostrarChatIA] = useState(false);
 
   const { tienePermiso, logout, usuario, cargando } = useAuth();
 
@@ -121,6 +123,10 @@ const Encabezado = () => {
             </Nav.Link>
           )}
 
+          <Nav.Link onClick={() => setMostrarChatIA(true)} className={mostrarMenu ? "color-texto-marca" : "text-black"}>
+            <i className="bi bi-robot me-2"></i><strong></strong>
+          </Nav.Link>
+
           <hr />
           {!mostrarMenu && (
             <Nav.Link onClick={cerrarSesion} className="text-black">
@@ -145,34 +151,39 @@ const Encabezado = () => {
   }
 
   return (
-    <Navbar expand="md" fixed="top" className="color-navbar shadow-lg" variant="dark">
-      <Container>
-        <Navbar.Brand
-          onClick={() => manejarNavegacion(esCatalogo ? "/catalogo" : "/")}
-          className="text-black fw-bold d-flex align-items-center"
-          style={{ cursor: "pointer" }}
-        >
-          <img alt="" src={logo} width="45" height="45" className="d-inline-block me-2" />
-          <strong><h4 className="mb-0">MartitaTools</h4></strong>
-        </Navbar.Brand>
+    <>
+      <Navbar expand="md" fixed="top" className="color-navbar shadow-lg" variant="dark">
+        <Container>
+          <Navbar.Brand
+            onClick={() => manejarNavegacion(esCatalogo ? "/catalogo" : "/")}
+            className="text-black fw-bold d-flex align-items-center"
+            style={{ cursor: "pointer" }}
+          >
+            <img alt="" src={logo} width="45" height="45" className="d-inline-block me-2" />
+            <strong><h4 className="mb-0">MartitaTools</h4></strong>
+          </Navbar.Brand>
 
-        {!esLogin && <Navbar.Toggle aria-controls="menu-offcanvas" onClick={manejarToggle} />}
+          {!esLogin && <Navbar.Toggle aria-controls="menu-offcanvas" onClick={manejarToggle} />}
 
-        <Navbar.Offcanvas
-          id="menu-offcanvas"
-          placement="end"
-          show={mostrarMenu}
-          onHide={() => setMostrarMenu(false)}
-        >
-          <Offcanvas.Header closeButton>
-            <Offcanvas.Title>Menú Sistema</Offcanvas.Title>
-          </Offcanvas.Header>
-          <Offcanvas.Body>
-            {contenidoMenu}
-          </Offcanvas.Body>
-        </Navbar.Offcanvas>
-      </Container>
-    </Navbar>
+          <Navbar.Offcanvas
+            id="menu-offcanvas"
+            placement="end"
+            show={mostrarMenu}
+            onHide={() => setMostrarMenu(false)}
+          >
+            <Offcanvas.Header closeButton>
+              <Offcanvas.Title>Menú Sistema</Offcanvas.Title>
+            </Offcanvas.Header>
+            <Offcanvas.Body>
+              {contenidoMenu}
+            </Offcanvas.Body>
+          </Navbar.Offcanvas>
+        </Container>
+      </Navbar>
+
+      {/* Renderizado del Modal de la IA */}
+      <ChatIA mostrar={mostrarChatIA} onCerrar={() => setMostrarChatIA(false)} />
+    </>
   );
 };
 

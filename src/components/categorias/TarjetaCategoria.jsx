@@ -6,6 +6,7 @@ const TarjetaCategoria = ({
   categorias,
   abrirModalEdicion,
   abrirModalEliminacion,
+  generarPDFCategoria, // Prop recibida correctamente
 }) => {
   const [cargando, setCargando] = useState(true);
   const [idTarjetaActiva, setIdTarjetaActiva] = useState(null);
@@ -23,8 +24,17 @@ const TarjetaCategoria = ({
     return () => window.removeEventListener("keydown", manejarTeclaEscape);
   }, [manejarTeclaEscape]);
 
-  const alternarTarjetaActiva = (id) => {
-    setIdTarjetaActiva((anterior) => (anterior === id ? null : id));
+  const ejecutarAccionSegura = (evento, accion) => {
+    evento.preventDefault();
+    evento.stopPropagation();
+    
+    if (typeof accion === "function") {
+      accion();
+    }
+    
+    setTimeout(() => {
+      setIdTarjetaActiva(null);
+    }, 80);
   };
 
   const estilos = {
@@ -48,15 +58,14 @@ const TarjetaCategoria = ({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: "rgba(255, 255, 255, 0.85)",
+      backgroundColor: "rgba(255, 255, 255, 0.96)",
       backdropFilter: "blur(4px)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       zIndex: 10,
     },
-    // Botones con estilo Soft-UI (como en la tabla)
-    btnEdit: {
+    btnAccion: {
       width: "50px",
       height: "50px",
       borderRadius: "12px",
@@ -64,21 +73,22 @@ const TarjetaCategoria = ({
       alignItems: "center",
       justifyContent: "center",
       border: "none",
+      fontSize: "1.2rem",
+    },
+    btnEdit: {
       color: "#f59e0b",
       backgroundColor: "#fffbeb",
-      fontSize: "1.2rem"
     },
     btnDelete: {
-      width: "50px",
-      height: "50px",
-      borderRadius: "12px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      border: "none",
       color: "#ef4444",
       backgroundColor: "#fef2f2",
-      fontSize: "1.2rem"
+    },
+    btnPDF: {
+      color: "#dc3545",
+      backgroundColor: "#fdf2f2",
+    },
+    iconoSeguro: {
+      pointerEvents: "none"
     }
   };
 
@@ -100,12 +110,12 @@ const TarjetaCategoria = ({
                 style={{
                   ...estilos.card,
                   transform: tarjetaActiva ? "scale(0.98)" : "scale(1)",
-                  boxShadow: tarjetaActiva 
-                    ? "0 10px 15px -3px rgba(0, 0, 0, 0.1)" 
-                    : "0 4px 6px -1px rgba(0, 0, 0, 0.05)"
+                  boxShadow: tarjetaActiva
+                    ? "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+                    : "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
                 }}
                 className="mb-3 rounded-4 w-100"
-                onClick={() => alternarTarjetaActiva(categoria.id)}
+                onClick={() => setIdTarjetaActiva(categoria.id)}
               >
                 <Card.Body className="p-3">
                   <Row className="align-items-center gx-3">
@@ -135,24 +145,34 @@ const TarjetaCategoria = ({
                     }}
                   >
                     <div className="d-flex gap-3" onClick={(e) => e.stopPropagation()}>
+                      {/* Editar */}
                       <Button
-                        style={estilos.btnEdit}
-                        onClick={() => {
-                          abrirModalEdicion(categoria);
-                          setIdTarjetaActiva(null);
-                        }}
+                        style={{ ...estilos.btnAccion, ...estilos.btnEdit }}
+                        className="shadow-sm"
+                        onClick={(e) => ejecutarAccionSegura(e, () => abrirModalEdicion(categoria))}
+                        title="Editar"
                       >
-                        <i className="bi bi-pencil-square"></i>
+                        <i className="bi bi-pencil-square" style={estilos.iconoSeguro}></i>
                       </Button>
 
+                      {/* Eliminar */}
                       <Button
-                        style={estilos.btnDelete}
-                        onClick={() => {
-                          abrirModalEliminacion(categoria);
-                          setIdTarjetaActiva(null);
-                        }}
+                        style={{ ...estilos.btnAccion, ...estilos.btnDelete }}
+                        className="shadow-sm"
+                        onClick={(e) => ejecutarAccionSegura(e, () => abrirModalEliminacion(categoria))}
+                        title="Eliminar"
                       >
-                        <i className="bi bi-trash3-fill"></i>
+                        <i className="bi bi-trash3-fill" style={estilos.iconoSeguro}></i>
+                      </Button>
+
+                      {/* Exportar Reporte PDF */}
+                      <Button
+                        style={{ ...estilos.btnAccion, ...estilos.btnPDF }}
+                        className="shadow-sm"
+                        onClick={(e) => ejecutarAccionSegura(e, () => generarPDFCategoria && generarPDFCategoria(categoria))}
+                        title="Exportar Reporte PDF"
+                      >
+                        <i className="bi bi-file-earmark-pdf-fill" style={estilos.iconoSeguro}></i>
                       </Button>
                     </div>
                   </div>

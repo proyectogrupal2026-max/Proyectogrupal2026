@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Spinner, Alert } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
 
+// Librerías para exportar a PDF
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
 // Importación de componentes
 import ModalRegistroCategoria from "../components/categorias/ModalRegistroCategoria";
 import ModalEdicionCategoria from "../components/categorias/ModalEdicionCategoria";
@@ -55,7 +59,7 @@ const Categorias = () => {
       const { data, error } = await supabase
         .from("categorias")
         .select("*")
-        .order("id", { ascending: false }); // <-- Trae los últimos registros de primero nativamente
+        .order("id", { ascending: false });
 
       if (error) throw error;
       setCategorias(data || []);
@@ -110,6 +114,59 @@ const Categorias = () => {
   const abrirModalEliminacion = (categoria) => {
     setCategoriaAEliminar(categoria);
     setMostrarModalEliminacion(true);
+  };
+
+  // --- LÓGICA DE EXPORTACIÓN PDF ---
+  const generarPDFCategoria = (categoria) => {
+    const doc = new jsPDF();
+
+    // Encabezado Corporativo
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(33, 37, 41);
+    doc.text("MARTITATOOLS - REPORTE DE CATEGORÍA", 14, 20);
+
+    // Subtítulo con marca de tiempo local
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(108, 117, 125);
+    const fechaEmision = new Date().toLocaleString("es-NI");
+    doc.text(`Fecha de emisión: ${fechaEmision}`, 14, 26);
+
+    // Línea divisoria decorativa azul institucional
+    doc.setDrawColor(13, 110, 253);
+    doc.setLineWidth(1);
+    doc.line(14, 30, 196, 30);
+
+    // Renderizar estructura del reporte en tabla
+    autoTable(doc, {
+      startY: 38,
+      theme: "striped",
+      headStyles: {
+        fillColor: [13, 110, 253],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+      },
+      head: [["Campo", "Detalle del Registro"]],
+      body: [
+        ["Código Interno (ID)", `#${categoria.id || "-"}`],
+        ["Nombre de la Categoría", `${categoria.nombre_categoria || "-"}`],
+        ["Descripción / Notas", `${categoria.descripcion_categoria || "Sin descripción disponible."}`],
+      ],
+      styles: { fontSize: 11, cellPadding: 5 },
+      columnStyles: {
+        0: { fontStyle: "bold", width: 50 },
+      },
+    });
+
+    // Pie de página
+    const finalY = doc.lastAutoTable.finalY || 40;
+    doc.setFontSize(9);
+    doc.setTextColor(140, 140, 140);
+    doc.text("Sistema de Control de Inventario - Ferretería Martita Castilla", 14, finalY + 15);
+
+    // Descarga automática del archivo
+    doc.save(`categoria_${categoria.nombre_categoria || "registro"}_${categoria.id}.pdf`);
   };
 
   // --- MANEJO DE INPUTS ---
@@ -171,7 +228,7 @@ const Categorias = () => {
         .delete()
         .eq("id", categoriaAEliminar.id);
       if (error) throw error;
-      setToast({ mostrar: true, mensaje: `Categoría eliminada.`, tipo: "exito" });
+      setToast({ mostrar: true, mensaje: `Categoría personalizada removida.`, tipo: "exito" });
       setMostrarModalEliminacion(false);
       await cargarCategorias();
     } catch (error) {
@@ -245,6 +302,7 @@ const Categorias = () => {
                   categorias={categoriasPaginadas}
                   abrirModalEdicion={abrirModalEdicion}
                   abrirModalEliminacion={abrirModalEliminacion}
+                  generarPDFCategoria={generarPDFCategoria} // <--- ¡AQUÍ ESTÁ LA REPARACIÓN!
                 />
               </div>
 
@@ -254,6 +312,7 @@ const Categorias = () => {
                   categorias={categoriasPaginadas}
                   abrirModalEdicion={abrirModalEdicion}
                   abrirModalEliminacion={abrirModalEliminacion}
+                  generarPDFCategoria={generarPDFCategoria}
                 />
               </div>
 

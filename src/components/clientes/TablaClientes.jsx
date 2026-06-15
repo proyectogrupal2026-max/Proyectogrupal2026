@@ -6,6 +6,7 @@ const TablaClientes = ({
   clientes,
   abrirModalEdicion,
   abrirModalEliminacion,
+  generarPDFCliente // <--- Recibimos la función como prop
 }) => {
   const [loading, setLoading] = useState(true);
 
@@ -59,10 +60,10 @@ const TablaClientes = ({
         <Table borderless hover responsive className="align-middle mb-0 text-center" style={{ tableLayout: 'fixed', width: '100%' }}>
           <thead style={estilos.encabezado} className="bg-light border-bottom">
             <tr className="text-secondary text-uppercase">
-              <th className="py-4" style={{ width: "15%" }}>ID</th>
-              <th className="py-4" style={{ width: "35%" }}>Nombre Completo</th>
-              <th className="d-none d-md-table-cell py-4" style={{ width: "35%" }}>Teléfono</th>
-              <th className="py-4" style={{ width: "15%" }}>Acciones</th>
+              <th className="py-4" style={{ width: "12%" }}>ID</th>
+              <th className="py-4" style={{ width: "38%" }}>Nombre Completo</th>
+              <th className="d-none d-md-table-cell py-4" style={{ width: "32%" }}>Teléfono</th>
+              <th className="py-4" style={{ width: "18%" }}>Acciones</th>
             </tr>
           </thead>
           <tbody style={{ fontSize: '1rem' }}>
@@ -79,6 +80,7 @@ const TablaClientes = ({
                 </td>
                 <td className="py-3">
                   <div style={estilos.celdaAcciones}>
+                    {/* Botón de Edición */}
                     <Button
                       variant="light"
                       style={{ 
@@ -94,6 +96,7 @@ const TablaClientes = ({
                       <i className="bi bi-pencil-square fs-6"></i>
                     </Button>
 
+                    {/* Botón de Eliminación */}
                     <Button
                       variant="light"
                       style={{ 
@@ -107,6 +110,22 @@ const TablaClientes = ({
                       title="Eliminar"
                     >
                       <i className="bi bi-trash3 fs-6"></i>
+                    </Button>
+
+                    {/* Botón: Exportar Documento PDF */}
+                    <Button
+                      variant="light"
+                      style={{ 
+                        ...estilos.btnAccion, 
+                        color: "#dc3545", 
+                        backgroundColor: "#fdf2f2",
+                        border: "1px solid #fcdede"
+                      }}
+                      className="shadow-sm"
+                      onClick={() => generarPDFCliente(cliente)}
+                      title="Exportar Reporte PDF"
+                    >
+                      <i className="bi bi-file-earmark-pdf-fill fs-6"></i>
                     </Button>
                   </div>
                 </td>

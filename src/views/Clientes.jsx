@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Spinner, Alert } from "react-bootstrap";
 import { supabase } from "../database/supabaseconfig";
 
+// Librerías para exportar a PDF
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
 // Importación de componentes locales
 import ModalRegistroClientes from "../components/clientes/ModalRegistroClientes";
 import ModalEdicionCliente from "../components/clientes/ModalEdicionCliente";
@@ -10,7 +14,7 @@ import TablaClientes from "../components/clientes/TablaClientes";
 import TarjetaClientes from "../components/clientes/TarjetaClientes";
 import NotificacionOperacion from "../components/NotificacionOperacion";
 
-// NUEVOS COMPONENTES DE LÓGICA COMPARTIDA
+// Componentes de lógica compartida
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import Paginacion from "../components/ordenamiento/Paginacion";
 
@@ -57,7 +61,7 @@ const Clientes = () => {
       const { data, error } = await supabase
         .from("clientes")
         .select("*")
-        .order("id", { ascending: false }); // <-- Últimos registros cargados arriba primero de forma nativa
+        .order("id", { ascending: false });
 
       if (error) throw error;
       setClientes(data || []);
@@ -111,6 +115,59 @@ const Clientes = () => {
     setMostrarModalEdicion(true);
   };
 
+  // --- LÓGICA DE EXPORTACIÓN PDF ---
+  const generarPDFCliente = (cliente) => {
+    const doc = new jsPDF();
+
+    // Encabezado Corporativo - MartitaTools
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(33, 37, 41);
+    doc.text("MARTITATOOLS - REPORTE DE CLIENTE", 14, 20);
+
+    // Subtítulo de Emisión
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(108, 117, 125);
+    const fechaEmision = new Date().toLocaleString("es-NI");
+    doc.text(`Fecha de emisión: ${fechaEmision}`, 14, 26);
+
+    // Línea divisoria decorativa azul institucional
+    doc.setDrawColor(13, 110, 253);
+    doc.setLineWidth(1);
+    doc.line(14, 30, 196, 30);
+
+    // Renderizado de tabla de datos
+    autoTable(doc, {
+      startY: 38,
+      theme: "striped",
+      headStyles: {
+        fillColor: [13, 110, 253],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+      },
+      head: [["Campo", "Detalle del Registro"]],
+      body: [
+        ["Código Único (ID)", `#${cliente.id || "-"}`],
+        ["Nombre Completo", `${cliente.nombre || ""} ${cliente.apellido || ""}`.trim() || "-"],
+        ["Número de Teléfono", `${cliente.telefono || "Sin teléfono registrado"}`],
+      ],
+      styles: { fontSize: 11, cellPadding: 5 },
+      columnStyles: {
+        0: { fontStyle: "bold", width: 50 },
+      },
+    });
+
+    // Pie de página sutil
+    const finalY = doc.lastAutoTable.finalY || 40;
+    doc.setFontSize(9);
+    doc.setTextColor(140, 140, 140);
+    doc.text("Sistema de Control Interno - Ferretería Martita Castilla", 14, finalY + 15);
+
+    // Descarga automatizada
+    doc.save(`cliente_${cliente.nombre || "registro"}_${cliente.id}.pdf`);
+  };
+
   const abrirModalEliminacion = (cliente) => {
     setClienteAEliminar(cliente);
     setMostrarModalEliminacion(true);
@@ -137,7 +194,7 @@ const Clientes = () => {
       const { error } = await supabase.from("clientes").insert([nuevoCliente]);
       
       if (error) {
-        if (error.code === "23505") { // Captura llave duplicada (ej. si controlas teléfonos únicos o cédulas en DB)
+        if (error.code === "23505") {
           setToast({ mostrar: true, mensaje: "Este cliente ya se encuentra registrado.", tipo: "advertencia" });
           return;
         }
@@ -260,6 +317,7 @@ const Clientes = () => {
                   clientes={clientesPaginados}
                   abrirModalEdicion={abrirModalEdicion}
                   abrirModalEliminacion={abrirModalEliminacion}
+                  generarPDFCliente={generarPDFCliente} // <--- Inyección de prop en móvil también
                 />
               </div>
 
@@ -269,6 +327,7 @@ const Clientes = () => {
                   clientes={clientesPaginados}
                   abrirModalEdicion={abrirModalEdicion}
                   abrirModalEliminacion={abrirModalEliminacion}
+                  generarPDFCliente={generarPDFCliente} // <--- Inyección de prop en desktop
                 />
               </div>
 
