@@ -6,7 +6,8 @@ const TarjetaProveedor = ({
   proveedores,
   abrirModalEdicion,
   abrirModalEliminacion,
-  generarPDFProveedor // <--- Recibimos la función de exportación
+  generarPDFProveedor,
+  copiarProveedor // <--- Nueva prop añadida
 }) => {
   const [cargando, setCargando] = useState(true);
   const [idTarjetaActiva, setIdTarjetaActiva] = useState(null);
@@ -70,6 +71,10 @@ const TarjetaProveedor = ({
       border: "none",
       fontSize: "1.1rem"
     },
+    btnCopy: { // <--- Estilo nuevo
+      color: "#198754",
+      backgroundColor: "#e2e8f0",
+    },
     btnEdit: {
       color: "#f59e0b",
       backgroundColor: "#fffbeb",
@@ -108,14 +113,6 @@ const TarjetaProveedor = ({
                 }}
                 className="mb-3 rounded-4 w-100"
                 onClick={() => alternarTarjetaActiva(proveedor.id)}
-                tabIndex={0}
-                onKeyDown={(evento) => {
-                  if (evento.key === "Enter" || evento.key === " ") {
-                    evento.preventDefault();
-                    alternarTarjetaActiva(proveedor.id);
-                  }
-                }}
-                aria-label={`Proveedor ${proveedor.nombre}`}
               >
                 <Card.Body className="p-3">
                   <Row className="align-items-center gx-3">
@@ -124,69 +121,37 @@ const TarjetaProveedor = ({
                         <i className="bi bi-truck fs-4"></i>
                       </div>
                     </Col>
-
                     <Col xs={9} className="text-start">
-                      <div className="fw-bold text-dark fs-5 text-truncate">
-                        {proveedor.nombre}
-                      </div>
-                      <div className="small text-muted text-truncate">
-                        <i className="bi bi-telephone me-1"></i>
-                        {proveedor.telefono || "Sin teléfono"}
-                      </div>
-                      <div className="small text-muted text-truncate mt-1">
-                        <i className="bi bi-geo-alt me-1"></i>
-                        {proveedor.direccion || "Sin dirección"}
-                      </div>
+                      <div className="fw-bold text-dark fs-5 text-truncate">{proveedor.nombre}</div>
+                      <div className="small text-muted text-truncate"><i className="bi bi-telephone me-1"></i>{proveedor.telefono || "Sin teléfono"}</div>
+                      <div className="small text-muted text-truncate mt-1"><i className="bi bi-geo-alt me-1"></i>{proveedor.direccion || "Sin dirección"}</div>
                     </Col>
                   </Row>
                 </Card.Body>
 
                 {tarjetaActiva && (
-                  <div
-                    role="dialog"
-                    aria-modal="true"
-                    style={estilos.overlay}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIdTarjetaActiva(null);
-                    }}
-                  >
+                  <div style={estilos.overlay} onClick={(e) => { e.stopPropagation(); setIdTarjetaActiva(null); }}>
                     <div className="d-flex gap-2" onClick={(e) => e.stopPropagation()}>
                       {/* Editar */}
-                      <Button
-                        style={{ ...estilos.btnAccion, ...estilos.btnEdit }}
-                        onClick={() => {
-                          abrirModalEdicion(proveedor);
-                          setIdTarjetaActiva(null);
-                        }}
-                        aria-label={`Editar ${proveedor.nombre}`}
-                      >
+                      <Button style={{ ...estilos.btnAccion, ...estilos.btnEdit }} onClick={() => { abrirModalEdicion(proveedor); setIdTarjetaActiva(null); }}>
                         <i className="bi bi-pencil-square"></i>
                       </Button>
-
                       {/* Eliminar */}
-                      <Button
-                        style={{ ...estilos.btnAccion, ...estilos.btnDelete }}
-                        onClick={() => {
-                          abrirModalEliminacion(proveedor);
-                          setIdTarjetaActiva(null);
-                        }}
-                        aria-label={`Eliminar ${proveedor.nombre}`}
-                      >
+                      <Button style={{ ...estilos.btnAccion, ...estilos.btnDelete }} onClick={() => { abrirModalEliminacion(proveedor); setIdTarjetaActiva(null); }}>
                         <i className="bi bi-trash3-fill"></i>
                       </Button>
-
-
                       {/* Exportar PDF */}
-                      <Button
-                        style={{ ...estilos.btnAccion, ...estilos.btnPDF }}
-                        onClick={() => {
-                          generarPDFProveedor(proveedor);
-                          setIdTarjetaActiva(null);
-                        }}
-                        aria-label={`Exportar PDF de ${proveedor.nombre}`}
-                      >
+                      <Button style={{ ...estilos.btnAccion, ...estilos.btnPDF }} onClick={() => { generarPDFProveedor(proveedor); setIdTarjetaActiva(null); }}>
                         <i className="bi bi-file-earmark-pdf-fill"></i>
+                      </Button>
+
+                      {/* Copiar */}
+                      <Button
+                        style={{ ...estilos.btnAccion, ...estilos.btnCopy }}
+                        onClick={() => { copiarProveedor(proveedor); setIdTarjetaActiva(null); }}
+                        title="Copiar información"
+                      >
+                        <i className="bi bi-clipboard"></i>
                       </Button>
                     </div>
                   </div>

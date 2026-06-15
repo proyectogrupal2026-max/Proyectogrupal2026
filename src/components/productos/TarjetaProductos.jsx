@@ -6,7 +6,9 @@ const TarjetaProducto = ({
   productos,
   abrirModalEdicion,
   abrirModalEliminacion,
-  generarPDFProducto
+  generarPDFProducto,
+  generarQRImagen,
+  captarProducto // AÑADIDO
 }) => {
   const [cargando, setCargando] = useState(true);
   const [idTarjetaActiva, setIdTarjetaActiva] = useState(null);
@@ -29,51 +31,12 @@ const TarjetaProducto = ({
   };
 
   const estilos = {
-    tarjeta: {
-      borderRadius: "16px",
-      transition: "all 0.3s ease",
-      cursor: "pointer",
-      position: "relative",
-      overflow: "hidden",
-      border: "1px solid #f1f5f9"
-    },
-    cuerpoActivo: {
-      backgroundColor: "#f8fafc",
-      transform: "scale(0.98)"
-    },
-    cuerpoInactivo: {
-      backgroundColor: "#ffffff"
-    },
-    capaAcciones: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "rgba(255, 255, 255, 0.8)",
-      backdropFilter: "blur(4px)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 2,
-      borderRadius: "16px"
-    },
-    btnRound: {
-      width: "45px",
-      height: "45px",
-      borderRadius: "12px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: "1.2rem",
-      border: "none",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-    },
-    precioTag: {
-      fontSize: "1.05rem",
-      fontWeight: "800",
-      color: "#0d6efd"
-    }
+    tarjeta: { borderRadius: "16px", transition: "all 0.3s ease", cursor: "pointer", position: "relative", overflow: "hidden", border: "1px solid #f1f5f9" },
+    cuerpoActivo: { backgroundColor: "#f8fafc", transform: "scale(0.98)" },
+    cuerpoInactivo: { backgroundColor: "#ffffff" },
+    capaAcciones: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(255, 255, 255, 0.8)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2, borderRadius: "16px" },
+    btnRound: { width: "45px", height: "45px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" },
+    precioTag: { fontSize: "1.05rem", fontWeight: "800", color: "#0d6efd" }
   };
 
   return (
@@ -92,15 +55,11 @@ const TarjetaProducto = ({
         <div className="px-1">
           {productos.map((producto) => {
             const tarjetaActiva = idTarjetaActiva === producto.id;
-
             return (
               <Card
                 key={producto.id}
                 className="mb-3 shadow-sm w-100"
-                style={{ 
-                  ...estilos.tarjeta,
-                  ...(tarjetaActiva ? estilos.cuerpoActivo : estilos.cuerpoInactivo)
-                }}
+                style={{ ...estilos.tarjeta, ...(tarjetaActiva ? estilos.cuerpoActivo : estilos.cuerpoInactivo) }}
                 onClick={() => alternarTarjetaActiva(producto.id)}
                 tabIndex={0}
                 onKeyDown={(evento) => {
@@ -109,98 +68,31 @@ const TarjetaProducto = ({
                     alternarTarjetaActiva(producto.id);
                   }
                 }}
-                aria-label={`Producto ${producto.nombre}`}
               >
                 <Card.Body className="p-2">
                   <Row className="align-items-center gx-3">
                     <Col xs={3} sm={2} className="px-2">
-                      <Image
-                        src={producto.url_imagen}
-                        alt={producto.nombre}
-                        rounded
-                        className="w-100"
-                        style={{ 
-                          aspectRatio: "1/1", 
-                          objectFit: "cover",
-                          borderRadius: "12px" 
-                        }}
-                      />
+                      <Image src={producto.url_imagen} alt={producto.nombre} rounded className="w-100" style={{ aspectRatio: "1/1", objectFit: "cover", borderRadius: "12px" }} />
                     </Col>
-
                     <Col xs={5} sm={6} className="text-start">
-                      <div className="fw-bold text-dark text-truncate" style={{ fontSize: "1rem" }}>
-                        {producto.nombre}
-                      </div>
-                      <div className="small text-muted text-truncate">
-                        {producto.categorias?.nombre_categoria || "Sin categoría"}
-                      </div>
-                      <div className="small mt-1">
-                        <span className={`badge rounded-pill ${producto.stock <= 5 ? "bg-danger" : "bg-light text-dark border"}`}>
-                          Stock: {producto.stock}
-                        </span>
-                      </div>
+                      <div className="fw-bold text-dark text-truncate" style={{ fontSize: "1rem" }}>{producto.nombre}</div>
+                      <div className="small text-muted text-truncate">{producto.categorias?.nombre_categoria || "Sin categoría"}</div>
+                      <div className="small mt-1"><span className={`badge rounded-pill ${producto.stock <= 5 ? "bg-danger" : "bg-light text-dark border"}`}>Stock: {producto.stock}</span></div>
                     </Col>
-
                     <Col xs={4} className="d-flex flex-column align-items-end justify-content-center text-end pe-3">
-                      <div style={estilos.precioTag}>
-                        C$ {parseFloat(producto.precio_venta || 0).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </div>
+                      <div style={estilos.precioTag}>C$ {parseFloat(producto.precio_venta || 0).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                     </Col>
                   </Row>
                 </Card.Body>
-
                 {tarjetaActiva && (
-                  <div
-                    role="dialog"
-                    aria-modal="true"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIdTarjetaActiva(null);
-                    }}
-                    style={estilos.capaAcciones}
-                  >
-                    <div
-                      className="d-flex gap-3"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Button
-                        variant="warning"
-                        style={{ ...estilos.btnRound, backgroundColor: "#fffbeb", color: "#f59e0b" }}
-                        onClick={() => {
-                          abrirModalEdicion(producto);
-                          setIdTarjetaActiva(null);
-                        }}
-                        aria-label={`Editar ${producto.nombre}`}
-                        title="Editar"
-                      >
-                        <i className="bi bi-pencil-fill"></i>
-                      </Button>
-
-                      <Button
-                        variant="danger"
-                        style={{ ...estilos.btnRound, backgroundColor: "#fef2f2", color: "#ef4444" }}
-                        onClick={() => {
-                          abrirModalEliminacion(producto);
-                          setIdTarjetaActiva(null);
-                        }}
-                        aria-label={`Eliminar ${producto.nombre}`}
-                        title="Eliminar"
-                      >
-                        <i className="bi bi-trash3-fill"></i>
-                      </Button>
-
-                      <Button
-                        variant="danger"
-                        style={{ ...estilos.btnRound, backgroundColor: "#fdf2f2", color: "#dc3545", border: "1px solid #fcdede" }}
-                        onClick={() => {
-                          generarPDFProducto(producto);
-                          setIdTarjetaActiva(null);
-                        }}
-                        aria-label={`Exportar PDF de ${producto.nombre}`}
-                        title="Exportar PDF de Producto"
-                      >
-                        <i className="bi bi-file-earmark-pdf-fill"></i>
-                      </Button>
+                  <div role="dialog" aria-modal="true" onClick={(e) => { e.stopPropagation(); setIdTarjetaActiva(null); }} style={estilos.capaAcciones}>
+                    <div className="d-flex gap-2 flex-wrap justify-content-center" onClick={(e) => e.stopPropagation()}>
+                      <Button variant="warning" style={{ ...estilos.btnRound, backgroundColor: "#fffbeb", color: "#f59e0b" }} onClick={() => { abrirModalEdicion(producto); setIdTarjetaActiva(null); }} title="Editar"><i className="bi bi-pencil-fill"></i></Button>
+                      <Button variant="danger" style={{ ...estilos.btnRound, backgroundColor: "#fef2f2", color: "#ef4444" }} onClick={() => { abrirModalEliminacion(producto); setIdTarjetaActiva(null); }} title="Eliminar"><i className="bi bi-trash3-fill"></i></Button>
+                      <Button variant="danger" style={{ ...estilos.btnRound, backgroundColor: "#fdf2f2", color: "#dc3545", border: "1px solid #fcdede" }} onClick={() => { generarPDFProducto(producto); setIdTarjetaActiva(null); }} title="Exportar PDF"><i className="bi bi-file-earmark-pdf-fill"></i></Button>
+                      <Button variant="outline-primary" style={{ ...estilos.btnRound, backgroundColor: "#eef2ff", color: "#4f46e5", border: "1px solid #e0e7ff" }} onClick={() => { generarQRImagen(producto); setIdTarjetaActiva(null); }} title="Generar código QR"><i className="bi bi-qr-code"></i></Button>
+                      {/* BOTÓN COPIAR AÑADIDO */}
+                      <Button variant="info" style={{ ...estilos.btnRound, backgroundColor: "#f0fdf4", color: "#16a34a", border: "1px solid #dcfce7" }} onClick={() => { captarProducto(producto); setIdTarjetaActiva(null); }} title="Copiar Datos"><i className="bi bi-clipboard-fill"></i></Button>
                     </div>
                   </div>
                 )}

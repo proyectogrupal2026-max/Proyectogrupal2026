@@ -6,141 +6,63 @@ const TablaProveedores = ({
   proveedores,
   abrirModalEdicion,
   abrirModalEliminacion,
-  generarPDFProveedor // <--- Recibimos la nueva función como prop
+  generarPDFProveedor,
+  copiarProveedor // <--- Nueva prop añadida
 }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (proveedores) {
-      setLoading(false);
-    } else {
-      setLoading(true);
-    }
+    setLoading(!proveedores);
   }, [proveedores]);
 
   const estilos = {
-    tablaContainer: {
-      backgroundColor: "#ffffff",
-      borderRadius: "16px",
-      overflow: "hidden",
-      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
-      border: "1px solid #f0f0f0",
-      marginTop: "20px"
-    },
-    header: {
-      backgroundColor: "#f8fafc",
-      color: "#64748b",
-      fontSize: "0.85rem",
-      fontWeight: "700",
-      letterSpacing: "0.05em"
-    },
-    fila: {
-      borderBottom: "1px solid #f1f5f9",
-    },
-    btnAccion: {
-      width: "38px",
-      height: "38px",
-      borderRadius: "10px",
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    btnEdit: {
-      border: "1px solid #fef3c7",
-      color: "#f59e0b",
-      backgroundColor: "#fffbeb",
-    },
-    btnDelete: {
-      border: "1px solid #fee2e2",
-      color: "#ef4444",
-      backgroundColor: "#fef2f2",
-    },
-    btnPDF: {
-      border: "1px solid #fee2e2",
-      color: "#dc3545",
-      backgroundColor: "#fdf2f2",
-    }
+    tablaContainer: { backgroundColor: "#ffffff", borderRadius: "16px", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)", border: "1px solid #f0f0f0", marginTop: "20px" },
+    header: { backgroundColor: "#f8fafc", color: "#64748b", fontSize: "0.85rem", fontWeight: "700" },
+    btnAccion: { width: "38px", height: "38px", borderRadius: "10px", display: "inline-flex", alignItems: "center", justifyContent: "center" },
+    btnCopy: { border: "1px solid #e2e8f0", color: "#198754", backgroundColor: "#f1f5f9" },
+    btnEdit: { border: "1px solid #fef3c7", color: "#f59e0b", backgroundColor: "#fffbeb" },
+    btnDelete: { border: "1px solid #fee2e2", color: "#ef4444", backgroundColor: "#fef2f2" },
+    btnPDF: { border: "1px solid #fee2e2", color: "#dc3545", backgroundColor: "#fdf2f2" }
   };
 
   return (
     <>
       {loading ? (
         <div className="text-center my-5 py-5">
-          <Spinner animation="border" variant="primary" role="status" />
-          <h4 className="text-muted mt-3 fw-semibold">Cargando proveedores...</h4>
-        </div>
-      ) : proveedores.length === 0 ? (
-        <div className="text-center my-5 py-5 text-muted">
-          <i className="bi bi-person-lines-fill fs-1 d-block mb-2"></i>
-          <h4 className="fw-semibold">No hay proveedores registrados.</h4>
+          <Spinner animation="border" variant="primary" />
+          <h4 className="text-muted mt-3">Cargando proveedores...</h4>
         </div>
       ) : (
         <div style={estilos.tablaContainer}>
-          <Table borderless hover responsive className="align-middle mb-0 text-center" style={{ tableLayout: 'fixed', width: '100%' }}>
-            <thead style={estilos.header} className="bg-light border-bottom">
-              <tr className="text-secondary text-uppercase">
-                <th className="py-4" style={{ width: "12%" }}>ID</th>
-                <th className="py-4" style={{ width: "28%" }}>Nombre</th>
-                <th className="py-4 d-none d-md-table-cell" style={{ width: "18%" }}>Teléfono</th>
-                <th className="py-4 d-none d-lg-table-cell" style={{ width: "24%" }}>Dirección</th>
-                <th className="py-4" style={{ width: "18%" }}>Acciones</th>
+          <Table borderless hover responsive className="align-middle mb-0 text-center">
+            <thead style={estilos.header}>
+              <tr className="text-uppercase">
+                <th className="py-4" style={{ width: "10%" }}>ID</th>
+                <th className="py-4" style={{ width: "25%" }}>Nombre</th>
+                <th className="py-4 d-none d-md-table-cell" style={{ width: "20%" }}>Teléfono</th>
+                <th className="py-4 d-none d-lg-table-cell" style={{ width: "25%" }}>Dirección</th>
+                <th className="py-4" style={{ width: "20%" }}>Acciones</th>
               </tr>
             </thead>
-
-            <tbody style={{ fontSize: '1rem' }}>
+            <tbody>
               {proveedores.map((proveedor) => (
-                <tr key={proveedor.id} style={estilos.fila}>
-                  <td className="py-3 fw-bold text-primary" style={{ fontSize: '1.1rem' }}>
-                    #{proveedor.id}
-                  </td>
+                <tr key={proveedor.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                  <td className="fw-bold text-primary">#{proveedor.id}</td>
+                  <td className="fw-bold">{proveedor.nombre}</td>
+                  <td className="d-none d-md-table-cell text-muted">{proveedor.telefono || "N/A"}</td>
+                  <td className="d-none d-lg-table-cell text-muted text-truncate">{proveedor.direccion || "N/A"}</td>
+                  <td>
+                    <div className="d-flex justify-content-center gap-1">
+                      {/* Botón Copiar */}
 
-                  <td className="py-3 fw-bold text-dark text-truncate">{proveedor.nombre}</td>
-
-                  <td className="py-3 d-none d-md-table-cell text-truncate">
-                    <span className="text-muted">
-                      <i className="bi bi-telephone me-2"></i>
-                      {proveedor.telefono || "N/A"}
-                    </span>
-                  </td>
-
-                  <td className="py-3 d-none d-lg-table-cell text-truncate" style={{ maxWidth: "250px" }}>
-                    <span className="text-muted">
-                      <i className="bi bi-geo-alt me-2"></i>
-                      {proveedor.direccion || "N/A"}
-                    </span>
-                  </td>
-
-                  <td className="py-3">
-                    <div className="d-flex justify-content-center gap-2">
                       {/* Editar */}
-                      <Button
-                        style={{ ...estilos.btnAccion, ...estilos.btnEdit }}
-                        className="shadow-sm"
-                        onClick={() => abrirModalEdicion(proveedor)}
-                        title="Editar proveedor"
-                      >
-                        <i className="bi bi-pencil-square fs-6"></i>
-                      </Button>
-
+                      <Button style={{...estilos.btnAccion, ...estilos.btnEdit}} className="shadow-sm" onClick={() => abrirModalEdicion(proveedor)} title="Editar"><i className="bi bi-pencil-square"></i></Button>
                       {/* Eliminar */}
-                      <Button
-                        style={{ ...estilos.btnAccion, ...estilos.btnDelete }}
-                        className="shadow-sm"
-                        onClick={() => abrirModalEliminacion(proveedor)}
-                        title="Eliminar proveedor"
-                      >
-                        <i className="bi bi-trash3-fill fs-6"></i>
-                      </Button>
+                      <Button style={{...estilos.btnAccion, ...estilos.btnDelete}} className="shadow-sm" onClick={() => abrirModalEliminacion(proveedor)} title="Eliminar"><i className="bi bi-trash3-fill"></i></Button>
+                      {/* PDF */}
+                      <Button style={{...estilos.btnAccion, ...estilos.btnPDF}} className="shadow-sm" onClick={() => generarPDFProveedor(proveedor)} title="PDF"><i className="bi bi-file-earmark-pdf-fill"></i></Button>
 
-                      {/* Exportar PDF del Proveedor */}
-                      <Button
-                        style={{ ...estilos.btnAccion, ...estilos.btnPDF }}
-                        className="shadow-sm"
-                        onClick={() => generarPDFProveedor(proveedor)}
-                        title="Exportar PDF de Proveedor"
-                      >
-                        <i className="bi bi-file-earmark-pdf-fill fs-6"></i>
-                      </Button>
+                                            <Button style={{...estilos.btnAccion, ...estilos.btnCopy}} className="shadow-sm" onClick={() => copiarProveedor(proveedor)} title="Copiar"><i className="bi bi-clipboard"></i></Button>
                     </div>
                   </td>
                 </tr>

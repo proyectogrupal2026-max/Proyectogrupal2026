@@ -6,7 +6,8 @@ const TarjetaCategoria = ({
   categorias,
   abrirModalEdicion,
   abrirModalEliminacion,
-  generarPDFCategoria, // Prop recibida correctamente
+  generarPDFCategoria,
+  copiarCategoria // Prop añadida
 }) => {
   const [cargando, setCargando] = useState(true);
   const [idTarjetaActiva, setIdTarjetaActiva] = useState(null);
@@ -27,11 +28,11 @@ const TarjetaCategoria = ({
   const ejecutarAccionSegura = (evento, accion) => {
     evento.preventDefault();
     evento.stopPropagation();
-    
+
     if (typeof accion === "function") {
       accion();
     }
-    
+
     setTimeout(() => {
       setIdTarjetaActiva(null);
     }, 80);
@@ -74,6 +75,10 @@ const TarjetaCategoria = ({
       justifyContent: "center",
       border: "none",
       fontSize: "1.2rem",
+    },
+    btnCopy: {
+      color: "#198754",
+      backgroundColor: "#f1fdf5",
     },
     btnEdit: {
       color: "#f59e0b",
@@ -145,6 +150,7 @@ const TarjetaCategoria = ({
                     }}
                   >
                     <div className="d-flex gap-3" onClick={(e) => e.stopPropagation()}>
+
                       {/* Editar */}
                       <Button
                         style={{ ...estilos.btnAccion, ...estilos.btnEdit }}
@@ -173,6 +179,16 @@ const TarjetaCategoria = ({
                         title="Exportar Reporte PDF"
                       >
                         <i className="bi bi-file-earmark-pdf-fill" style={estilos.iconoSeguro}></i>
+                      </Button>
+
+                      {/* Copiar */}
+                      <Button
+                        style={{ ...estilos.btnAccion, ...estilos.btnCopy }}
+                        className="shadow-sm"
+                        onClick={(e) => ejecutarAccionSegura(e, () => copiarCategoria(categoria))}
+                        title="Copiar al portapapeles"
+                      >
+                        <i className="bi bi-clipboard" style={estilos.iconoSeguro}></i>
                       </Button>
                     </div>
                   </div>

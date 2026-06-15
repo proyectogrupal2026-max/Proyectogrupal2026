@@ -50,6 +50,19 @@ const Clientes = () => {
 
   const [clienteAEliminar, setClienteAEliminar] = useState(null);
 
+  // --- LÓGICA: COPIAR AL PORTAPAPELES (NUEVO) ---
+  const copiarClienteAlPortapapeles = async (cliente) => {
+    if (!cliente) return;
+    const texto = `Nombre: ${cliente.nombre} ${cliente.apellido}, Teléfono: ${cliente.telefono || "Sin teléfono"}`;
+    try {
+      await navigator.clipboard.writeText(texto);
+      setToast({ mostrar: true, mensaje: "Datos del cliente copiados al portapapeles.", tipo: "exito" });
+    } catch (err) {
+      console.error("Error al copiar al portapapeles", err);
+      setToast({ mostrar: true, mensaje: "Error al copiar al portapapeles.", tipo: "error" });
+    }
+  };
+
   // --- CARGA DE DATOS ---
   useEffect(() => {
     cargarClientes();
@@ -317,7 +330,8 @@ const Clientes = () => {
                   clientes={clientesPaginados}
                   abrirModalEdicion={abrirModalEdicion}
                   abrirModalEliminacion={abrirModalEliminacion}
-                  generarPDFCliente={generarPDFCliente} // <--- Inyección de prop en móvil también
+                  generarPDFCliente={generarPDFCliente}
+                  copiarCliente={copiarClienteAlPortapapeles}
                 />
               </div>
 
@@ -327,7 +341,8 @@ const Clientes = () => {
                   clientes={clientesPaginados}
                   abrirModalEdicion={abrirModalEdicion}
                   abrirModalEliminacion={abrirModalEliminacion}
-                  generarPDFCliente={generarPDFCliente} // <--- Inyección de prop en desktop
+                  generarPDFCliente={generarPDFCliente}
+                  copiarCliente={copiarClienteAlPortapapeles}
                 />
               </div>
 

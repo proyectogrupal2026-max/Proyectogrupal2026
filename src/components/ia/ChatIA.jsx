@@ -11,17 +11,18 @@ const ChatIA = ({ mostrar, onCerrar }) => {
 
   const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
+  // Estructura extraída exactamente de tu diagrama (todo en minúsculas)
   const contextoBaseDatos = `
   ESTRUCTURA DE BASE DE DATOS DE MARTITATOOLS:
   - perfiles (user_id, nombre_completo, rol, telefono)
   - categorias (id, nombre_categoria, descripcion_categoria)
   - proveedores (id, nombre, telefono, direccion)
   - clientes (id, nombre, apellido, telefono)
-  - productos (id, nombre, categoria_id, precio_compra, precio_venta, stock) -> NOTA: Escríbela siempre como "productos" a nivel de SQL plano.
-  - ventas (id, fecha_venta, vendedor_id, cliente_id, estado, total)
+  - productos (id, nombre, categoria_producto, precio_compra, precio_venta, stock, url_imagen) -> ¡REGLA CRÍTICA! Todo en minúsculas. NUNCA uses "Productos" con mayúscula ni comillas.
+  - ventas (id, fecha_venta, vendedor_id, estado, cliente_id, total)
   - detalles_ventas (id, venta_id, producto_id, cantidad, precio_venta, total)
   - compras (id, fecha_compra, proveedor_id, total)
-  - detalles_compras (id, compra_id, producto_id, cantidad, precio_compra, total)
+  - detalles_compras (id, compra_id, producto_id, cantidad, precio_compra)
   `;
 
   const enviarConsulta = async () => {
@@ -42,12 +43,13 @@ const ChatIA = ({ mostrar, onCerrar }) => {
       ${contextoBaseDatos}
 
       REGLAS DE SINTAXIS OBLIGATORIAS:
-      1. Usa el nombre de tabla "productos" (todo en minúsculas) en tu consulta SQL de salida. El backend se encarga del mapeo de mayúsculas.
-      2. Llaves de tablas: Las llaves primarias se llaman 'id'. Las llaves foráneas se llaman 'cliente_id', 'producto_id', 'venta_id', etc.
-      3. Alias planos: En el SELECT usa siempre alias cortos con "AS" con nombres limpios de una sola palabra para las columnas resultantes (Ejemplo: SELECT productos.nombre AS producto, SUM(detalles_ventas.cantidad) AS vendidos).
-      4. El array de "columnas" debe tener exactamente los mismos alias definidos en tu SELECT de forma plana.
-      5. NO uses punto y coma (;) al final del SQL.
-      6. Devuelve EXCLUSIVAMENTE un objeto JSON válido, sin bloques de código markdown extra.
+      1. Todas las tablas y columnas van estrictamente en minúsculas y SIN comillas dobles (productos, detalles_ventas, clientes, etc.). PROHIBIDO generar "Productos".
+      2. NUNCA uses alias cortos para los nombres de las tablas en las cláusulas FROM o JOIN (PROHIBIDO hacer "FROM productos p" o "FROM clientes c"). Escribe siempre el nombre completo de la tabla al invocar columnas (Ejemplo correcto: clientes.nombre, productos.nombre).
+      3. Para unir productos con categorías, la columna correcta es: productos.categoria_producto = categorias.id
+      4. REGLA DE AGRUPACIÓN: En las cláusulas "GROUP BY", usa siempre el nombre real de la tabla y su columna original (Ejemplo: GROUP BY productos.nombre).
+      5. Alias de Columnas: En el SELECT usa siempre alias cortos usando "AS" con nombres limpios de una sola palabra en MINÚSCULAS para las columnas de datos resultantes (Ejemplo: SELECT productos.nombre AS producto, SUM(detalles_ventas.cantidad) AS vendidos).
+      6. NO uses punto y coma (;) al final del SQL.
+      7. Devuelve EXCLUSIVAMENTE un objeto JSON válido, sin bloques de código markdown extra.
 
       Estructura de respuesta requerida:
       {
@@ -73,6 +75,9 @@ const ChatIA = ({ mostrar, onCerrar }) => {
       const respuestaIA = JSON.parse(textoJsonLimpio);
       
       let sqlLimpio = respuestaIA.consulta_sql.trim();
+      
+      // Filtro de seguridad por si la IA se salta las reglas: forzar minúsculas en productos
+      sqlLimpio = sqlLimpio.replace(/"Productos"/g, "productos").replace(/Productos/g, "productos");
 
       const { data, error } = await supabase.rpc('ejecutar_consulta_segura', {
         query_sql: sqlLimpio
@@ -83,8 +88,16 @@ const ChatIA = ({ mostrar, onCerrar }) => {
         throw new Error(`SQL_ERROR: ${error.message}`);
       }
 
-      const datosExtraidos = data ? data.map(item => item.datos) : [];
-      const columnasFinales = respuestaIA.columnas || (datosExtraidos.length > 0 ? Object.keys(datosExtraidos[0]) : []);
+      const datosExtraidos = data ? data.map(item => {
+        if (item && typeof item === 'object') {
+          return item.row_to_json || item.datos || item;
+        }
+        return item;
+      }) : [];
+      
+      const columnasFinales = datosExtraidos.length > 0 
+        ? Object.keys(datosExtraidos[0]) 
+        : (respuestaIA.columnas || []);
 
       const mensajeRespuesta = {
         tipo: 'ia',
@@ -100,11 +113,8 @@ const ChatIA = ({ mostrar, onCerrar }) => {
       console.error("Error detectado en ChatIA:", error);
       
       let mensajeAmigable = "No logré procesar el análisis de datos. Por favor, intenta de nuevo.";
-      
-      if (error.message.includes("429") || error.message.includes("quota") || error.message.includes("Quota exceeded")) {
-        mensajeAmigable = "⚠️ Has agotado las consultas gratuitas del asistente de IA por el día de hoy. Por favor, espera un momento o intenta más tarde.";
-      } else if (error.message.includes("SQL_ERROR")) {
-        mensajeAmigable = `Error estructural en las tablas: ${error.message.replace("SQL_ERROR:", "")}`;
+      if (error.message.includes("SQL_ERROR")) {
+        mensajeAmigable = `Error en base de datos: ${error.message.replace("SQL_ERROR:", "")}`;
       }
 
       setMensajes(prev => [...prev, {
@@ -132,14 +142,13 @@ const ChatIA = ({ mostrar, onCerrar }) => {
             
             {mensajes.length === 0 && (
               <div className="text-center text-muted mt-5">
-                <h4>Asistente de Inteligencia de Negocios</h4>
-                <p className="mt-2">Métricas en tiempo real de tu ferretería:</p>
+                <h4>Asistente Estadístico de Inventario y Ventas</h4>
+                <p className="mt-2">Métricas en tiempo real de tu negocio:</p>
                 <div className="d-inline-block text-start bg-white p-3 rounded shadow-sm">
                   <ul className="mb-0">
-                    <li>Los 10 productos más vendidos</li>
-                    <li>Clientes que más han comprado</li>
-                    <li>Ventas totales de este mes</li>
-                    <li>Listar todos los productos en stock</li>
+                    <li>¿Cuáles son los 10 productos más vendidos?</li>
+                    <li>Listar el stock de los productos</li>
+                    <li>Monto total de ventas de este mes</li>
                   </ul>
                 </div>
               </div>
@@ -166,13 +175,25 @@ const ChatIA = ({ mostrar, onCerrar }) => {
                       <tbody>
                         {msg.datos.map((fila, i) => (
                           <tr key={i}>
-                            {msg.columnas.map((col, j) => (
-                              <td key={j}>
-                                {typeof fila[col] === 'number' && (col.toLowerCase().includes('total') || col.toLowerCase().includes('monto') || col.toLowerCase().includes('comprado') || col.toLowerCase().includes('precio') || col.toLowerCase().includes('venta') || col.toLowerCase().includes('compra') || col.toLowerCase().includes('vendido') || col.toLowerCase().includes('cantidad'))
-                                  ? `C$ ${fila[col].toFixed(2)}` 
-                                  : String(fila[col] ?? 'N/A')}
-                              </td>
-                            ))}
+                            {msg.columnas.map((col, j) => {
+                              const valor = fila[col];
+                              const columnaMinuscula = col.toLowerCase();
+                              
+                              const esMoneda = columnaMinuscula.includes('total') || 
+                                               columnaMinuscula.includes('monto') || 
+                                               columnaMinuscula.includes('precio') ||
+                                               columnaMinuscula.includes('pago');
+
+                              return (
+                                <td key={j}>
+                                  {typeof valor === 'number'
+                                    ? esMoneda 
+                                      ? `C$ ${valor.toFixed(2)}` 
+                                      : valor 
+                                    : String(valor ?? 'N/A')}
+                                </td>
+                              );
+                            })}
                           </tr>
                         ))}
                       </tbody>
@@ -185,7 +206,7 @@ const ChatIA = ({ mostrar, onCerrar }) => {
             {cargando && (
               <div className="text-center py-3 text-primary fw-bold">
                 <Spinner animation="border" size="sm" className="me-2" /> 
-                Consultando métricas de MartitaTools...
+                Analizando base de datos...
               </div>
             )}
             <div ref={finChatRef} />

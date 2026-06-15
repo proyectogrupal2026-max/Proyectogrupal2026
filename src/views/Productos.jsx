@@ -8,6 +8,7 @@ import autoTable from "jspdf-autotable";
 
 // Componentes modales y complementos
 import ModalRegistroProducto from "../components/productos/ModalRegistroProducto";
+import ModalQRProducto from "../components/productos/ModalQRProducto"; 
 import NotificacionOperacion from "../components/NotificacionOperacion";
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import TablaProductos from "../components/productos/TablaProductos";
@@ -26,8 +27,9 @@ const Productos = () => {
   const [mostrarModal, setMostrarModal] = useState(false);
   const [mostrarModalEliminacion, setMostrarModalEliminacion] = useState(false);
   const [mostrarModalEdicion, setMostrarModalEdicion] = useState(false);
+  const [mostrarModalQR, setMostrarModalQR] = useState(false); 
+  const [productoQR, setProductoQR] = useState(null);
 
-  // Estados originales del esquema de base de datos
   const [nuevoProducto, setNuevoProducto] = useState({
     nombre: "",
     categoria_producto: "",
@@ -54,6 +56,41 @@ const Productos = () => {
 
   const [registrosPorPagina, establecerRegistrosPorPagina] = useState(10);
   const [paginaActual, establecerPaginaActual] = useState(1);
+
+  // --- LÓGICA DE COPIADO AL PORTAPAPELES ---
+  const captarProducto = async (producto) => {
+    if (!producto) return;
+    const texto = `Producto: ${producto.nombre}\nCategoría: ${producto.categorias?.nombre_categoria || "Sin categoría"}\nPrecio Venta: C$ ${producto.precio_venta}\nStock: ${producto.stock} unidades`;
+    try {
+      await navigator.clipboard.writeText(texto);
+      setToast({
+        mostrar: true,
+        mensaje: `Datos de "${producto.nombre}" copiados al portapapeles`,
+        tipo: "exito",
+      });
+    } catch (err) {
+      console.error("Error al copiar", err);
+      setToast({
+        mostrar: true,
+        mensaje: "No se pudo copiar al portapapeles",
+        tipo: "error",
+      });
+    }
+  };
+
+  // --- FUNCIÓN AÑADIDA PARA QR ---
+  const generarQRImagen = (producto) => {
+    if (!producto?.url_imagen) {
+        setToast({
+          mostrar: true,
+          mensaje: "Este producto no tiene imagen asociada",
+          tipo: "advertencia",
+        });
+        return;
+      }
+    setProductoQR(producto);
+    setMostrarModalQR(true);
+  };
 
   const manejoCambioInput = (e) => {
     const { name, value } = e.target;
@@ -265,41 +302,27 @@ const Productos = () => {
     }
   };
 
-  // --- LÓGICA DE EXPORTACIÓN REPORTE INDIVIDUAL PDF ---
   const generarPDFProducto = (prod) => {
     const doc = new jsPDF();
-
-    // Título Principal Corporativo
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.setTextColor(33, 37, 41);
     doc.text("MARTITATOOLS - FICHA DE PRODUCTO", 14, 20);
-
-    // Metadata informativa
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(108, 117, 125);
     const emision = new Date().toLocaleString("es-NI");
     doc.text(`Fecha y Hora de Emisión: ${emision}`, 14, 26);
-
-    // Divisor decorativo
     doc.setDrawColor(13, 110, 253);
     doc.setLineWidth(1);
     doc.line(14, 30, 196, 30);
-
-    // Datos estructurados en tabla formal
     const categoriaNombre = prod.categorias?.nombre_categoria || "Sin asignar";
     const pVenta = parseFloat(prod.precio_venta || 0).toLocaleString('es-NI', { minimumFractionDigits: 2 });
     const pCompra = parseFloat(prod.precio_compra || 0).toLocaleString('es-NI', { minimumFractionDigits: 2 });
-
     autoTable(doc, {
       startY: 38,
       theme: "striped",
-      headStyles: {
-        fillColor: [13, 110, 253],
-        textColor: [255, 255, 255],
-        fontStyle: "bold",
-      },
+      headStyles: { fillColor: [13, 110, 253], textColor: [255, 255, 255], fontStyle: "bold" },
       head: [["Atributo Técnico", "Detalle de Registro Interno"]],
       body: [
         ["Código Identificador (ID)", `#${prod.id}`],
@@ -310,17 +333,12 @@ const Productos = () => {
         ["Precio General de Venta", `C$ ${pVenta}`],
       ],
       styles: { fontSize: 11, cellPadding: 6 },
-      columnStyles: {
-        0: { fontStyle: "bold", width: 60 },
-      },
+      columnStyles: { 0: { fontStyle: "bold", width: 60 } },
     });
-
-    // Cierre o pie del reporte técnico
     const yFinal = doc.lastAutoTable.finalY || 45;
     doc.setFontSize(9);
     doc.setTextColor(142, 142, 142);
     doc.text("Ferretería Martita Castilla - Control Digital e Inteligencia de Negocio", 14, yFinal + 15);
-
     doc.save(`Ficha_Producto_${prod.id}_${prod.nombre?.replace(/\s+/g, '_')}.pdf`);
   };
 
@@ -353,7 +371,6 @@ const Productos = () => {
 
   return (
     <Container className="mt-3">
-      {/* Cabecera optimizada con Flexbox */}
       <div className="d-flex align-items-center justify-content-between mb-3 mt-2">
         <div className="d-flex align-items-center">
           <h3 className="mb-0 fw-bold">
@@ -361,16 +378,11 @@ const Productos = () => {
             Gestión de Productos
           </h3>
         </div>
-
         <div className="ms-2">
           <Button
             onClick={() => setMostrarModal(true)}
             className="d-flex align-items-center justify-content-center shadow-sm px-3"
-            style={{
-              height: '42px',
-              borderRadius: '10px',
-              minWidth: '45px'
-            }}
+            style={{ height: '42px', borderRadius: '10px', minWidth: '45px' }}
           >
             <i className="bi-plus-lg"></i>
             <span className="d-none d-sm-inline ms-2 fw-semibold" style={{ whiteSpace: 'nowrap' }}>
@@ -379,9 +391,7 @@ const Productos = () => {
           </Button>
         </div>
       </div>
-
       <hr />
-
       <Row className="mb-4">
         <Col md={6} lg={5}>
           <CuadroBusquedas
@@ -391,7 +401,6 @@ const Productos = () => {
           />
         </Col>
       </Row>
-
       {cargando ? (
         <div className="text-center my-5 py-5">
           <Spinner animation="border" variant="primary" />
@@ -404,28 +413,28 @@ const Productos = () => {
         </div>
       ) : (
         <Row>
-          {/* Vista Móvil */}
           <Col xs={12} className="d-lg-none">
             <TarjetaProducto
               productos={productosPaginados}
               abrirModalEdicion={(p) => { setProductoEditar(p); setMostrarModalEdicion(true); }}
               abrirModalEliminacion={(p) => { setProductoAEliminar(p); setMostrarModalEliminacion(true); }}
               generarPDFProducto={generarPDFProducto}
+              generarQRImagen={generarQRImagen}
+              captarProducto={captarProducto}
             />
           </Col>
-          
-          {/* Vista Escritorio */}
           <Col lg={12} className="d-none d-lg-block">
             <TablaProductos
               productos={productosPaginados}
               abrirModalEdicion={(p) => { setProductoEditar(p); setMostrarModalEdicion(true); }}
               abrirModalEliminacion={(p) => { setProductoAEliminar(p); setMostrarModalEliminacion(true); }}
               generarPDFProducto={generarPDFProducto}
+              generarQRImagen={generarQRImagen}
+              captarProducto={captarProducto}
             />
           </Col>
         </Row>
       )}
-
       {!cargando && productosFiltrados.length > 0 && (
         <Paginacion
           registrosPorPagina={registrosPorPagina}
@@ -435,7 +444,6 @@ const Productos = () => {
           establecerRegistrosPorPagina={establecerRegistrosPorPagina}
         />
       )}
-
       <ModalRegistroProducto
         mostrarModal={mostrarModal}
         setMostrarModal={setMostrarModal}
@@ -445,7 +453,6 @@ const Productos = () => {
         agregarProducto={agregarProducto}
         categorias={categorias}
       />
-
       <ModalEdicionProducto
         mostrarModalEdicion={mostrarModalEdicion}
         setMostrarModalEdicion={setMostrarModalEdicion}
@@ -455,14 +462,17 @@ const Productos = () => {
         actualizarProducto={actualizarProducto}
         categorias={categorias}
       />
-
       <ModalEliminacionProducto
         mostrarModalEliminacion={mostrarModalEliminacion}
         setMostrarModalEliminacion={setMostrarModalEliminacion}
         eliminarProducto={eliminarProducto}
         producto={productoAEliminar}
       />
-
+      <ModalQRProducto
+        mostrar={mostrarModalQR}
+        onHide={() => setMostrarModalQR(false)}
+        producto={productoQR}
+      />
       <NotificacionOperacion
         mostrar={toast.mostrar}
         mensaje={toast.mensaje}

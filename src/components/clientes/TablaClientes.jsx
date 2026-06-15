@@ -6,7 +6,8 @@ const TablaClientes = ({
   clientes,
   abrirModalEdicion,
   abrirModalEliminacion,
-  generarPDFCliente // <--- Recibimos la función como prop
+  generarPDFCliente,
+  copiarCliente // <--- Prop recibida
 }) => {
   const [loading, setLoading] = useState(true);
 
@@ -61,9 +62,9 @@ const TablaClientes = ({
           <thead style={estilos.encabezado} className="bg-light border-bottom">
             <tr className="text-secondary text-uppercase">
               <th className="py-4" style={{ width: "12%" }}>ID</th>
-              <th className="py-4" style={{ width: "38%" }}>Nombre Completo</th>
-              <th className="d-none d-md-table-cell py-4" style={{ width: "32%" }}>Teléfono</th>
-              <th className="py-4" style={{ width: "18%" }}>Acciones</th>
+              <th className="py-4" style={{ width: "35%" }}>Nombre Completo</th>
+              <th className="d-none d-md-table-cell py-4" style={{ width: "25%" }}>Teléfono</th>
+              <th className="py-4" style={{ width: "28%" }}>Acciones</th>
             </tr>
           </thead>
           <tbody style={{ fontSize: '1rem' }}>
@@ -83,9 +84,9 @@ const TablaClientes = ({
                     {/* Botón de Edición */}
                     <Button
                       variant="light"
-                      style={{ 
-                        ...estilos.btnAccion, 
-                        color: "#f59e0b", 
+                      style={{
+                        ...estilos.btnAccion,
+                        color: "#f59e0b",
                         backgroundColor: "#fffbeb",
                         border: "1px solid #fef3c7"
                       }}
@@ -99,9 +100,9 @@ const TablaClientes = ({
                     {/* Botón de Eliminación */}
                     <Button
                       variant="light"
-                      style={{ 
-                        ...estilos.btnAccion, 
-                        color: "#ef4444", 
+                      style={{
+                        ...estilos.btnAccion,
+                        color: "#ef4444",
                         backgroundColor: "#fef2f2",
                         border: "1px solid #fee2e2"
                       }}
@@ -115,9 +116,9 @@ const TablaClientes = ({
                     {/* Botón: Exportar Documento PDF */}
                     <Button
                       variant="light"
-                      style={{ 
-                        ...estilos.btnAccion, 
-                        color: "#dc3545", 
+                      style={{
+                        ...estilos.btnAccion,
+                        color: "#dc3545",
                         backgroundColor: "#fdf2f2",
                         border: "1px solid #fcdede"
                       }}
@@ -126,6 +127,22 @@ const TablaClientes = ({
                       title="Exportar Reporte PDF"
                     >
                       <i className="bi bi-file-earmark-pdf-fill fs-6"></i>
+                    </Button>
+
+                    {/* Botón de Copiar */}
+                    <Button
+                      variant="light"
+                      style={{
+                        ...estilos.btnAccion,
+                        color: "#198754",
+                        backgroundColor: "#f0fdf4",
+                        border: "1px solid #dcfce7"
+                      }}
+                      className="shadow-sm"
+                      onClick={() => copiarCliente(cliente)}
+                      title="Copiar datos"
+                    >
+                      <i className="bi bi-clipboard-fill fs-6"></i>
                     </Button>
                   </div>
                 </td>

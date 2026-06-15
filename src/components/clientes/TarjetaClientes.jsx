@@ -6,7 +6,8 @@ const TarjetaClientes = ({
   clientes,
   abrirModalEdicion,
   abrirModalEliminacion,
-  generarPDFCliente // <--- Añadida la prop aquí también para soporte móvil
+  generarPDFCliente,
+  copiarCliente // <--- Prop recibida
 }) => {
   const [cargando, setCargando] = useState(true);
   const [idTarjetaActiva, setIdTarjetaActiva] = useState(null);
@@ -49,12 +50,12 @@ const TarjetaClientes = ({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: "rgba(255, 255, 255, 0.92)", // Ligeramente más opaco para mejor contraste de 3 botones
+      backgroundColor: "rgba(255, 255, 255, 0.92)",
       backdropFilter: "blur(4px)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      zIndex: 10,
+      zindex: 10,
     },
     btnEdit: {
       width: "46px",
@@ -78,6 +79,18 @@ const TarjetaClientes = ({
       border: "none",
       color: "#ef4444",
       backgroundColor: "#fef2f2",
+      fontSize: "1.2rem"
+    },
+    btnCopy: {
+      width: "46px",
+      height: "46px",
+      borderRadius: "12px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      border: "none",
+      color: "#198754",
+      backgroundColor: "#f0fdf4",
       fontSize: "1.2rem"
     },
     btnPdf: {
@@ -112,8 +125,8 @@ const TarjetaClientes = ({
                 style={{
                   ...estilos.card,
                   transform: tarjetaActiva ? "scale(0.98)" : "scale(1)",
-                  boxShadow: tarjetaActiva 
-                    ? "0 10px 15px -3px rgba(0, 0, 0, 0.1)" 
+                  boxShadow: tarjetaActiva
+                    ? "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
                     : "0 4px 6px -1px rgba(0, 0, 0, 0.05)"
                 }}
                 className="mb-3 rounded-4 w-100"
@@ -184,6 +197,19 @@ const TarjetaClientes = ({
                       >
                         <i className="bi bi-file-earmark-pdf-fill"></i>
                       </Button>
+
+                      {/* Botón de Copiar */}
+                      <Button
+                        style={estilos.btnCopy}
+                        className="shadow-sm"
+                        onClick={() => {
+                          copiarCliente(cliente);
+                          setIdTarjetaActiva(null);
+                        }}
+                        title="Copiar datos"
+                      >
+                        <i className="bi bi-clipboard-fill"></i>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -195,5 +221,5 @@ const TarjetaClientes = ({
     </>
   );
 };
- 
+
 export default TarjetaClientes;

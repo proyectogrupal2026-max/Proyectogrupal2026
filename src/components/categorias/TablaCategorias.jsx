@@ -6,7 +6,8 @@ const TablaCategorias = ({
   categorias,
   abrirModalEdicion,
   abrirModalEliminacion,
-  generarPDFCategoria // <--- Recibimos la nueva función como prop
+  generarPDFCategoria,
+  copiarCategoria // Prop añadida
 }) => {
   const [loading, setLoading] = useState(true);
 
@@ -85,12 +86,13 @@ const TablaCategorias = ({
                 </td>
                 <td className="py-3">
                   <div style={estilos.celdaAcciones}>
+
                     {/* Botón de Edición */}
                     <Button
                       variant="light"
-                      style={{ 
-                        ...estilos.btnAccion, 
-                        color: "#f59e0b", 
+                      style={{
+                        ...estilos.btnAccion,
+                        color: "#f59e0b",
                         backgroundColor: "#fffbeb",
                         border: "1px solid #fef3c7"
                       }}
@@ -104,9 +106,9 @@ const TablaCategorias = ({
                     {/* Botón de Eliminación */}
                     <Button
                       variant="light"
-                      style={{ 
-                        ...estilos.btnAccion, 
-                        color: "#ef4444", 
+                      style={{
+                        ...estilos.btnAccion,
+                        color: "#ef4444",
                         backgroundColor: "#fef2f2",
                         border: "1px solid #fee2e2"
                       }}
@@ -117,12 +119,12 @@ const TablaCategorias = ({
                       <i className="bi bi-trash3 fs-6"></i>
                     </Button>
 
-                    {/* NUEVO BOTÓN: EXPORTAR REPORTE PDF */}
+                    {/* Botón de Exportar Reporte PDF */}
                     <Button
                       variant="light"
-                      style={{ 
-                        ...estilos.btnAccion, 
-                        color: "#dc3545", // Color rojo clásico de archivos PDF
+                      style={{
+                        ...estilos.btnAccion,
+                        color: "#dc3545",
                         backgroundColor: "#fdf2f2",
                         border: "1px solid #fcdede"
                       }}
@@ -131,6 +133,21 @@ const TablaCategorias = ({
                       title="Exportar Reporte PDF"
                     >
                       <i className="bi bi-file-earmark-pdf-fill fs-6"></i>
+                    </Button>
+
+                    <Button
+                      variant="light"
+                      style={{
+                        ...estilos.btnAccion,
+                        color: "#16a34a",
+                        backgroundColor: "#f0fdf4",
+                        border: "1px solid #dcfce7"
+                      }}
+                      className="shadow-sm"
+                      onClick={() => copiarCategoria(categoria)}
+                      title="Copiar al portapapeles"
+                    >
+                      <i className="bi bi-clipboard fs-6"></i>
                     </Button>
                   </div>
                 </td>

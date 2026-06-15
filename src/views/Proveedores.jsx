@@ -57,6 +57,27 @@ const Proveedores = () => {
     cargarProveedores();
   }, []);
 
+  // --- LÓGICA DE COPIAR AL PORTAPAPELES (NUEVO) ---
+  const copiarProveedor = async (proveedor) => {
+    if (!proveedor) return;
+    const texto = `Proveedor: ${proveedor.nombre}\nTeléfono: ${proveedor.telefono || "No especificado"}\nDirección: ${proveedor.direccion || "No especificada"}`;
+    try {
+      await navigator.clipboard.writeText(texto);
+      setToast({
+        mostrar: true,
+        mensaje: `Información de "${proveedor.nombre}" copiada al portapapeles.`,
+        tipo: "exito",
+      });
+    } catch (err) {
+      console.error("Error al copiar:", err);
+      setToast({
+        mostrar: true,
+        mensaje: "Error al copiar al portapapeles.",
+        tipo: "error",
+      });
+    }
+  };
+
   const cargarProveedores = async () => {
     try {
       setCargando(true);
@@ -250,36 +271,24 @@ const Proveedores = () => {
     }
   };
 
-  // --- LÓGICA DE EXPORTACIÓN REPORTE INDIVIDUAL PDF ---
   const generarPDFProveedor = (prov) => {
     const doc = new jsPDF();
-
-    // Título Principal Corporativo
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.setTextColor(33, 37, 41);
     doc.text("MARTITATOOLS - EXPEDIENTE DE PROVEEDOR", 14, 20);
-
-    // Metadata informativa
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(108, 117, 125);
     const emision = new Date().toLocaleString("es-NI");
     doc.text(`Fecha y Hora de Emisión: ${emision}`, 14, 26);
-
-    // Divisor estético azul
     doc.setDrawColor(13, 110, 253);
     doc.setLineWidth(1);
     doc.line(14, 30, 196, 30);
-
     autoTable(doc, {
       startY: 38,
       theme: "striped",
-      headStyles: {
-        fillColor: [13, 110, 253],
-        textColor: [255, 255, 255],
-        fontStyle: "bold",
-      },
+      headStyles: { fillColor: [13, 110, 253], textColor: [255, 255, 255], fontStyle: "bold" },
       head: [["Campo de Registro", "Información Detallada"]],
       body: [
         ["ID Proveedor", `#${prov.id}`],
@@ -288,22 +297,17 @@ const Proveedores = () => {
         ["Dirección Física / Sucursal", prov.direccion || "No especificada"],
       ],
       styles: { fontSize: 11, cellPadding: 6 },
-      columnStyles: {
-        0: { fontStyle: "bold", width: 60 },
-      },
+      columnStyles: { 0: { fontStyle: "bold", width: 60 } },
     });
-
     const yFinal = doc.lastAutoTable.finalY || 45;
     doc.setFontSize(9);
     doc.setTextColor(142, 142, 142);
     doc.text("Ferretería Martita Castilla - Sistema de Control y Cadena de Suministro", 14, yFinal + 15);
-
     doc.save(`Proveedor_${prov.id}_${prov.nombre?.replace(/\s+/g, '_')}.pdf`);
   };
 
   return (
     <Container className="mt-4">
-      {/* Cabecera */}
       <div className="d-flex align-items-center justify-content-between mb-4 mt-2">
         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
           <h3 className="mb-0 fw-bold">
@@ -311,16 +315,11 @@ const Proveedores = () => {
             <span className="text-truncate">Gestión de Proveedores</span>
           </h3>
         </div>
-
         <div className="ms-2">
           <Button
             onClick={() => setMostrarModalRegistro(true)}
             className="d-flex align-items-center justify-content-center shadow-sm px-3"
-            style={{ 
-              height: '42px', 
-              borderRadius: '10px',
-              minWidth: '45px'
-            }}
+            style={{ height: '42px', borderRadius: '10px', minWidth: '45px' }}
           >
             <i className="bi bi-plus-lg"></i>
             <span className="d-none d-sm-inline ms-2 fw-semibold" style={{ whiteSpace: 'nowrap' }}>
@@ -329,10 +328,7 @@ const Proveedores = () => {
           </Button>
         </div>
       </div>
-
       <hr />
-
-      {/* CUADRO DE BÚSQUEDA */}
       <Row className="mb-4">
         <Col md={6} lg={5}>
           <CuadroBusquedas
@@ -342,16 +338,12 @@ const Proveedores = () => {
           />
         </Col>
       </Row>
-
-      {/* MENSAJE SI NO HAY COINCIDENCIAS */}
       {!cargando && textoBusqueda.trim() && proveedoresFiltrados.length === 0 && (
         <Alert variant="info" className="text-center">
           <i className="bi bi-info-circle me-2"></i>
           No se encontraron proveedores que coincidan con "{textoBusqueda}".
         </Alert>
       )}
-
-      {/* Contenido Principal */}
       {cargando ? (
         <div className="text-center my-5 py-5">
           <Spinner animation="border" variant="primary" />
@@ -361,26 +353,24 @@ const Proveedores = () => {
         <>
           {proveedoresFiltrados.length > 0 && (
             <>
-              {/* Vista Móvil */}
               <div className="d-lg-none">
                 <TarjetaProveedor
                   proveedores={proveedoresPaginados}
                   abrirModalEdicion={abrirModalEdicion}
                   abrirModalEliminacion={abrirModalEliminacion}
-                  generarPDFProveedor={generarPDFProveedor} // <--- Inyectado para móviles
+                  generarPDFProveedor={generarPDFProveedor}
+                  copiarProveedor={copiarProveedor}
                 />
               </div>
-
-              {/* Vista Desktop */}
               <div className="d-none d-lg-block">
                 <TablaProveedores
                   proveedores={proveedoresPaginados}
                   abrirModalEdicion={abrirModalEdicion}
                   abrirModalEliminacion={abrirModalEliminacion}
-                  generarPDFProveedor={generarPDFProveedor} // <--- Inyectado para tablas
+                  generarPDFProveedor={generarPDFProveedor}
+                  copiarProveedor={copiarProveedor}
                 />
               </div>
-
               <Paginacion
                 registrosPorPagina={registrosPorPagina}
                 totalRegistros={proveedoresFiltrados.length}
@@ -392,8 +382,6 @@ const Proveedores = () => {
           )}
         </>
       )}
-
-      {/* Modales y Toasts de Operación permanecen iguales */}
       <ModalRegistroProveedor
         mostrarModal={mostrarModalRegistro}
         setMostrarModal={setMostrarModalRegistro}
@@ -401,7 +389,6 @@ const Proveedores = () => {
         manejoCambioInput={manejoCambioInput}
         agregarProveedor={agregarProveedor}
       />
-
       <ModalEdicionProveedor
         mostrarModalEdicion={mostrarModalEdicion}
         setMostrarModalEdicion={setMostrarModalEdicion}
@@ -409,24 +396,17 @@ const Proveedores = () => {
         manejoCambioInputEdicion={manejoCambioInputEdicion}
         actualizarProveedor={actualizarProveedor}
       />
-
       <ModalEliminacionProveedor
         mostrarModalEliminacion={mostrarModalEliminacion}
         setMostrarModalEliminacion={setMostrarModalEliminacion}
         eliminarProveedor={eliminarProveedor}
         proveedor={proveedorAEliminar}
       />
-
       <NotificacionOperacion
         mostrar={toast.mostrar}
         mensaje={toast.mensaje}
         tipo={toast.tipo}
-        onCerrar={() =>
-          setToast((prev) => ({
-            ...prev,
-            mostrar: false,
-          }))
-        }
+        onCerrar={() => setToast((prev) => ({ ...prev, mostrar: false }))}
       />
     </Container>
   );
