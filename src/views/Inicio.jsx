@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Container, Row, Col, Card, Spinner, Form, Button } from "react-bootstrap";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -6,9 +6,16 @@ import {
 } from "recharts";
 import { supabase } from "../database/supabaseconfig";
 import { utils, writeFile } from 'xlsx';
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import html2canvas from "html2canvas";
 
 export default function Inicio() {
   const [cargando, setCargando] = useState(true);
+  
+  // Referencias para capturar el contenedor de cada gráfico
+  const graficoHoraRef = useRef(null);
+  const graficoCategoriaRef = useRef(null);
   
   // Rango de fechas por defecto en formato Nicaragua (YYYY-MM-DD)
   const [fechaDesde, setFechaDesde] = useState(
@@ -209,6 +216,74 @@ export default function Inicio() {
     }
   };
 
+  // Lógica de exportación a PDF para el gráfico de Ventas por Hora
+  const exportarPDFVentasHora = async () => {
+    try {
+      const doc = new jsPDF();
+      doc.setFont("Helvetica", "bold");
+      doc.text("Reporte Estadístico de Ventas por Hora", 14, 16);
+      doc.setFont("Helvetica", "normal");
+      doc.text(`Rango de consulta: ${fechaDesde} hasta ${fechaHasta}`, 14, 24);
+
+      const filas = estadisticas.ventasPorHora.map(item => [item.hora, `C$ ${item.total}`]);
+      
+      autoTable(doc, {
+        head: [["Hora", "Monto Total"]],
+        body: filas,
+        startY: 30,
+        theme: "grid",
+        headStyles: { fillColor: [94, 38, 178] } // Usando tu color primario morado #5e26b2
+      });
+
+      if (graficoHoraRef.current) {
+        const canvas = await html2canvas(graficoHoraRef.current);
+        const imgData = canvas.toDataURL("image/png");
+        const finalY = doc.lastAutoTable.finalY + 10;
+        // Agrega la captura del gráfico justo debajo de la tabla generada
+        doc.addImage(imgData, "PNG", 14, finalY, 180, 90);
+      }
+
+      const fechaActual = new Date().toLocaleDateString("en-CA", { timeZone: "America/Managua" });
+      doc.save(`VentasPorHora_${fechaDesde}_a_${fechaHasta}_${fechaActual}.pdf`);
+    } catch (error) {
+      console.error("Error generando PDF de Ventas por Hora:", error);
+    }
+  };
+
+  // Lógica de exportación a PDF para el gráfico de Ventas por Categoría
+  const exportarPDFVentasCategoria = async () => {
+    try {
+      const doc = new jsPDF();
+      doc.setFont("Helvetica", "bold");
+      doc.text("Reporte Estadístico de Ventas por Categoría", 14, 16);
+      doc.setFont("Helvetica", "normal");
+      doc.text(`Rango de consulta: ${fechaDesde} hasta ${fechaHasta}`, 14, 24);
+
+      const filas = estadisticas.ventasPorCategoria.map(item => [item.name, `C$ ${item.value.toFixed(2)}`]);
+
+      autoTable(doc, {
+        head: [["Categoría", "Total Generado"]],
+        body: filas,
+        startY: 30,
+        theme: "grid",
+        headStyles: { fillColor: [94, 38, 178] }
+      });
+
+      if (graficoCategoriaRef.current) {
+        const canvas = await html2canvas(graficoCategoriaRef.current);
+        const imgData = canvas.toDataURL("image/png");
+        const finalY = doc.lastAutoTable.finalY + 10;
+        // Agrega la captura del gráfico circular justo debajo de la tabla generada
+        doc.addImage(imgData, "PNG", 60, finalY, 100, 90);
+      }
+
+      const fechaActual = new Date().toLocaleDateString("en-CA", { timeZone: "America/Managua" });
+      doc.save(`VentasPorCategoria_${fechaDesde}_a_${fechaHasta}_${fechaActual}.pdf`);
+    } catch (error) {
+      console.error("Error generando PDF de Ventas por Categoría:", error);
+    }
+  };
+
   return (
     <div className="mt-2">
       <div className="mb-4 d-flex justify-content-between align-items-center">
@@ -282,42 +357,56 @@ export default function Inicio() {
           <Col lg={8}>
             <Card className="shadow border-0">
               <Card.Body>
-                <h5 className="mb-3">Flujo de Ventas por Hora</h5>
-                <ResponsiveContainer width="100%" height={360}>
-                  <LineChart data={estadisticas.ventasPorHora}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="hora" />
-                    <YAxis tickFormatter={(v) => `C$ ${v}`} />
-                    <Tooltip formatter={(v) => [`C$ ${v}`, "Monto"]} />
-                    <Line type="monotone" dataKey="total" stroke="#5e26b2" strokeWidth={4} dot={{ r: 6 }} />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h5 className="mb-0">Flujo de Ventas por Hora</h5>
+                  <Button variant="outline-danger" size="sm" onClick={exportarPDFVentasHora} disabled={cargando}>
+                    <i className="bi bi-file-earmark-pdf me-1"></i> Exportar PDF
+                  </Button>
+                </div>
+                <div ref={graficoHoraRef}>
+                  <ResponsiveContainer width="100%" height={360}>
+                    <LineChart data={estadisticas.ventasPorHora}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="hora" />
+                      <YAxis tickFormatter={(v) => `C$ ${v}`} />
+                      <Tooltip formatter={(v) => [`C$ ${v}`, "Monto"]} />
+                      <Line type="monotone" dataKey="total" stroke="#5e26b2" strokeWidth={4} dot={{ r: 6 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               </Card.Body>
             </Card>
           </Col>
           <Col lg={4}>
             <Card className="shadow border-0">
               <Card.Body>
-                <h5 className="mb-3">Ventas por Categoría</h5>
-                <ResponsiveContainer width="100%" height={360}>
-                  <PieChart>
-                    <Pie
-                      data={estadisticas.ventasPorCategoria.length > 0 ? estadisticas.ventasPorCategoria : [{ name: "Sin datos", value: 0.1 }]}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={110}
-                      label
-                    >
-                      {estadisticas.ventasPorCategoria.map((_, i) => (
-                        <Cell key={`cell-${i}`} fill={COLORES[i % COLORES.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v) => `C$ ${v}`} />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h5 className="mb-0">Ventas por Categoría</h5>
+                  <Button variant="outline-danger" size="sm" onClick={exportarPDFVentasCategoria} disabled={cargando}>
+                    <i className="bi bi-file-earmark-pdf me-1"></i> Exportar PDF
+                  </Button>
+                </div>
+                <div ref={graficoCategoriaRef}>
+                  <ResponsiveContainer width="100%" height={360}>
+                    <PieChart>
+                      <Pie
+                        data={estadisticas.ventasPorCategoria.length > 0 ? estadisticas.ventasPorCategoria : [{ name: "Sin datos", value: 0.1 }]}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={110}
+                        label
+                      >
+                        {estadisticas.ventasPorCategoria.map((_, i) => (
+                          <Cell key={`cell-${i}`} fill={COLORES[i % COLORES.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(v) => `C$ ${v}`} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </Card.Body>
             </Card>
           </Col>
